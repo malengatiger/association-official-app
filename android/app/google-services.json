@@ -1,0 +1,124 @@
+{
+  "project_info": {
+    "project_number": "657690570978",
+    "project_id": "kasie-transie-4",
+    "storage_bucket": "kasie-transie-4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:657690570978:android:b2d126fe7157e556646ebb",
+        "android_client_info": {
+          "package_name": "com.boha.association"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5AGxqLVyDNjRoRRDYVcnBq6_HMPAu3MU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:657690570978:android:6d34fd87688d1224646ebb",
+        "android_client_info": {
+          "package_name": "com.boha.kasie.car.telemetry"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5AGxqLVyDNjRoRRDYVcnBq6_HMPAu3MU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:657690570978:android:38f1268e0b037239646ebb",
+        "android_client_info": {
+          "package_name": "com.boha.kasie_transie_ambassador"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5AGxqLVyDNjRoRRDYVcnBq6_HMPAu3MU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:657690570978:android:ed074c6d3686f73e646ebb",
+        "android_client_info": {
+          "package_name": "com.kasie.association"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5AGxqLVyDNjRoRRDYVcnBq6_HMPAu3MU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:657690570978:android:1aa4b2f6867aeb38646ebb",
+        "android_client_info": {
+          "package_name": "com.kasie.commuter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5AGxqLVyDNjRoRRDYVcnBq6_HMPAu3MU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:657690570978:android:3ac7b42afcbc67db646ebb",
+        "android_client_info": {
+          "package_name": "com.kasie.marshal100"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5AGxqLVyDNjRoRRDYVcnBq6_HMPAu3MU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
