@@ -55,15 +55,19 @@ class OfficialDashboardState extends State<OfficialDashboard>
   late StreamSubscription<RankFeeCashPayment> rankFeeCashPaymentSub;
   late StreamSubscription<RankFeeCashCheckIn> rankFeeCashCheckInSub;
   late StreamSubscription<lib.VehicleTelemetry> telemetrySub;
+  late StreamSubscription<lib.Trip> tripSub;
 
   List<lib.DispatchRecord> dispatches = [];
   List<lib.AmbassadorPassengerCount> passengerCounts = [];
   List<lib.CommuterRequest> commuterRequests = [];
   List<CommuterCashPayment> commuterCashPayments = [];
-  List<CommuterCashCheckIn> commuterCashCheckIn = [];
+  List<CommuterCashCheckIn> commuterCashCheckIns = [];
   List<RankFeeCashPayment> rankFeeCashPayments = [];
-  List<RankFeeCashCheckIn> rankFeeCashCheckIn = [];
+  List<RankFeeCashCheckIn> rankFeeCashCheckIns = [];
   List<lib.VehicleTelemetry> vehicleTelemetry = [];
+  List<lib.Trip> trips = [];
+
+//
   List<lib.User> users = [];
   List<lib.Vehicle> vehicles = [];
   List<lib.Route> routes = [];
@@ -100,6 +104,243 @@ class OfficialDashboardState extends State<OfficialDashboard>
         setState(() {});
       }
     });
+    dispatchSub = fcmService.dispatchStream.listen((dr) {
+      dispatches.add(dr);
+      _filterDispatches(dispatches);
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    passengerCountSub =
+        fcmService.passengerCountStream.listen((passengerCount) {
+      passengerCounts.add(passengerCount);
+      _filterPassengerCounts(passengerCounts);
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    commuterCashPaymentSub =
+        fcmService.commuterCashPaymentStream.listen((payment) {
+      commuterCashPayments.add(payment);
+      _filterCommuterCashPayments(commuterCashPayments);
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    commuterCashCheckInSub =
+        fcmService.commuterCashCheckInStream.listen((checkIn) {
+      commuterCashCheckIns.add(checkIn);
+      _filterCommuterCashCheckIns(commuterCashCheckIns);
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    rankFeeCashCheckInSub =
+        fcmService.rankFeeCashCheckInStream.listen((checkIn) {
+      rankFeeCashCheckIns.add(checkIn);
+      _filterRankFeeCashCheckIns(rankFeeCashCheckIns);
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    rankFeeCashPaymentSub =
+        fcmService.rankFeeCashPaymentStream.listen((payment) {
+      rankFeeCashPayments.add(payment);
+      _filterCommuterCashPayments(commuterCashPayments);
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    tripSub = fcmService.tripStream.listen((trip) {
+      trips.add(trip);
+      _filterTrips(trips);
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    //
+    telemetrySub = fcmService.vehicleTelemetryStream.listen((trip) {
+      vehicleTelemetry.add(trip);
+      _filterTelemetry(vehicleTelemetry);
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  List<lib.VehicleTelemetry> _filterTelemetry(
+      List<lib.VehicleTelemetry> counts) {
+    pp('$mm _filterTelemetry arrived: ${counts.length}');
+
+    List<lib.VehicleTelemetry> filtered = [];
+    DateTime now = DateTime.now().toUtc();
+    for (var r in counts) {
+      var date = DateTime.parse(r.created!);
+      var difference = now.difference(date);
+      pp('$mm _filterTelemetry difference: $difference');
+
+      if (difference <= const Duration(hours: 1)) {
+        filtered.add(r);
+      }
+    }
+    pp('$mm _filterTelemetry filtered: ${filtered.length}');
+    setState(() {
+      vehicleTelemetry = filtered;
+    });
+    return filtered;
+  }
+
+  List<lib.Trip> _filterTrips(List<lib.Trip> counts) {
+    pp('$mm _filterTrips arrived: ${counts.length}');
+
+    List<lib.Trip> filtered = [];
+    DateTime now = DateTime.now().toUtc();
+    for (var r in counts) {
+      var date = DateTime.parse(r.created!);
+      var difference = now.difference(date);
+      pp('$mm _filterTrips difference: $difference');
+
+      if (difference <= const Duration(hours: 1)) {
+        filtered.add(r);
+      }
+    }
+    pp('$mm _filterTrips filtered: ${filtered.length}');
+    setState(() {
+      trips = filtered;
+    });
+    return filtered;
+  }
+
+  List<RankFeeCashCheckIn> _filterRankFeeCashCheckIns(
+      List<RankFeeCashCheckIn> counts) {
+    pp('$mm _filterRankFeeCashCheckIns arrived: ${counts.length}');
+
+    List<RankFeeCashCheckIn> filtered = [];
+    DateTime now = DateTime.now().toUtc();
+    for (var r in counts) {
+      var date = DateTime.parse(r.created!);
+      var difference = now.difference(date);
+      pp('$mm _filterRankFeeCashCheckIns difference: $difference');
+
+      if (difference <= const Duration(hours: 1)) {
+        filtered.add(r);
+      }
+    }
+    pp('$mm _filterRankFeeCashCheckIns filtered: ${filtered.length}');
+    setState(() {
+      rankFeeCashCheckIns = filtered;
+    });
+    return filtered;
+  }
+
+  List<RankFeeCashPayment> _filterRankFeeCashPayments(
+      List<RankFeeCashPayment> counts) {
+    pp('$mm _filterRankFeeCashPayments arrived: ${counts.length}');
+
+    List<RankFeeCashPayment> filtered = [];
+    DateTime now = DateTime.now().toUtc();
+    for (var r in counts) {
+      var date = DateTime.parse(r.created!);
+      var difference = now.difference(date);
+      pp('$mm _filterRankFeeCashPayments difference: $difference');
+
+      if (difference <= const Duration(hours: 1)) {
+        filtered.add(r);
+      }
+    }
+    pp('$mm _filterPassengerCounts filtered: ${filtered.length}');
+    setState(() {
+      rankFeeCashPayments = filtered;
+    });
+    return filtered;
+  }
+
+  List<CommuterCashCheckIn> _filterCommuterCashCheckIns(
+      List<CommuterCashCheckIn> counts) {
+    pp('$mm _filterCommuterCashCheckIns arrived: ${counts.length}');
+
+    List<CommuterCashCheckIn> filtered = [];
+    DateTime now = DateTime.now().toUtc();
+    for (var r in counts) {
+      var date = DateTime.parse(r.created!);
+      var difference = now.difference(date);
+      pp('$mm _filterCommuterCashCheckIns difference: $difference');
+
+      if (difference <= const Duration(hours: 1)) {
+        filtered.add(r);
+      }
+    }
+    pp('$mm _filterCommuterCashCheckIns filtered: ${filtered.length}');
+    setState(() {
+      commuterCashCheckIns = filtered;
+    });
+    return filtered;
+  }
+
+  List<CommuterCashPayment> _filterCommuterCashPayments(
+      List<CommuterCashPayment> counts) {
+    pp('$mm _filterCommuterCashPayments arrived: ${counts.length}');
+
+    List<CommuterCashPayment> filtered = [];
+    DateTime now = DateTime.now().toUtc();
+    for (var r in counts) {
+      var date = DateTime.parse(r.created!);
+      var difference = now.difference(date);
+      pp('$mm _filterCommuterCashPayments difference: $difference');
+
+      if (difference <= const Duration(hours: 1)) {
+        filtered.add(r);
+      }
+    }
+    pp('$mm _filterCommuterCashPayments filtered: ${filtered.length}');
+    setState(() {
+      commuterCashPayments = filtered;
+    });
+    return filtered;
+  }
+
+  List<lib.AmbassadorPassengerCount> _filterPassengerCounts(
+      List<lib.AmbassadorPassengerCount> counts) {
+    pp('$mm _filterPassengerCounts arrived: ${counts.length}');
+
+    List<lib.AmbassadorPassengerCount> filtered = [];
+    DateTime now = DateTime.now().toUtc();
+    for (var r in counts) {
+      var date = DateTime.parse(r.created!);
+      var difference = now.difference(date);
+      pp('$mm _filterPassengerCounts difference: $difference');
+
+      if (difference <= const Duration(hours: 1)) {
+        filtered.add(r);
+      }
+    }
+    pp('$mm _filterPassengerCounts filtered: ${filtered.length}');
+    setState(() {
+      passengerCounts = filtered;
+    });
+    return filtered;
+  }
+
+  List<lib.DispatchRecord> _filterDispatches(
+      List<lib.DispatchRecord> requests) {
+    pp('$mm _filterDispatches arrived: ${requests.length}');
+
+    List<lib.DispatchRecord> filtered = [];
+    DateTime now = DateTime.now().toUtc();
+    for (var r in requests) {
+      var date = DateTime.parse(r.created!);
+      var difference = now.difference(date);
+      pp('$mm filterDispatchRecord difference: $difference');
+
+      if (difference <= const Duration(hours: 1)) {
+        filtered.add(r);
+      }
+    }
+    pp('$mm _filterDispatches filtered: ${filtered.length}');
+    setState(() {
+      dispatches = filtered;
+    });
+    return filtered;
   }
 
   _initializeTimer() async {
@@ -302,7 +543,87 @@ class OfficialDashboardState extends State<OfficialDashboard>
         context: context, widget: AssociationVehiclePhotoHandler());
   }
 
-  void _getData() async {}
+  String? startDate, endDate;
+  bool busy = false;
+  lib.AssociationData? associationData;
+
+  void _getData() async {
+    pp('$mm .... getting association data bundle ....');
+    setState(() {
+      busy = true;
+    });
+    startDate ??= DateTime.now().toUtc().subtract(const Duration(hours: 24)).toIso8601String();
+    endDate ??= DateTime.now().toUtc().toIso8601String();
+
+    var user = prefs.getUser();
+    associationData = await listApiDog.getAssociationData(
+        associationId: user!.associationId!,
+        startDate: startDate!,
+        endDate: endDate!);
+    if (associationData != null) {
+      users = associationData!.users;
+      vehicles = associationData!.vehicles;
+      routes = associationData!.routes;
+      totalPassengersIn = _getPassengers();
+      totalRankFeeCash = _getRankFees();
+      totalCommuterCash = _getCommuterCash();
+      totalPassengersRequests = _getPassengersRequests();
+      totalCashCheckIn = _getCommuterCashCheckIn();
+      totalRankFeeCheckIn = _getRankFeeCashCheckIn();
+      totalDispatchedPassengers = _getDispatchedPassengers();
+    }
+    setState(() {
+      busy = false;
+    });
+  }
+
+  int _getDispatchedPassengers() {
+    var tot = 0;
+    for (var value in dispatches) {
+      tot += value.passengers!;
+    }
+    return tot;
+  }
+
+  double _getRankFeeCashCheckIn() {
+    var tot = 0.00;
+    for (var value in rankFeeCashCheckIns) {
+      tot += value.amount!;
+    }
+    return tot;
+  }
+
+  double _getCommuterCashCheckIn() {
+    var tot = 0.00;
+    for (var value in commuterCashCheckIns) {
+      tot += value.amount!;
+    }
+    return tot;
+  }
+
+  int _getPassengersRequests() {
+    var tot = 0;
+    for (var value in commuterRequests) {
+      tot += value.numberOfPassengers!;
+    }
+    return tot;
+  }
+
+  double _getCommuterCash() {
+    var tot = 0.00;
+    for (var value in commuterCashPayments) {
+      tot += value.amount!;
+    }
+    return tot;
+  }
+
+  double _getRankFees() {
+    var tot = 0.00;
+    for (var value in rankFeeCashPayments) {
+      tot += value.amount!;
+    }
+    return tot;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -349,7 +670,8 @@ class OfficialDashboardState extends State<OfficialDashboard>
                           children: [
                             TotalWidget(
                                 caption: 'Passengers In',
-                                number: totalPassengersIn, color: Colors.green,
+                                number: totalPassengersIn,
+                                color: Colors.green,
                                 onTapped: () {
                                   pp('$mm totalPassengersIn tapped');
                                 }),
