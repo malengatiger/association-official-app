@@ -255,7 +255,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm _filterVehicleArrivals difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -277,7 +277,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm _filterTelemetry difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -298,7 +298,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm _filterTrips difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -320,7 +320,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm _filterRankFeeCashCheckIns difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -342,7 +342,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm _filterRankFeeCashPayments difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -364,7 +364,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm _filterCommuterCashCheckIns difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -386,7 +386,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm _filterCommuterCashPayments difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -408,7 +408,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm _filterPassengerCounts difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -419,6 +419,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
     return filtered;
   }
 
+  int filterHours= 24;
   List<lib.DispatchRecord> _filterDispatches(
       List<lib.DispatchRecord> requests) {
     pp('$mm _filterDispatches arrived: ${requests.length}');
@@ -430,7 +431,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm filterDispatchRecord difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -445,13 +446,24 @@ class OfficialDashboardState extends State<OfficialDashboard>
     pp('\n\n$mm initialize Timer for ambassador commuters');
     timer = Timer.periodic(Duration(seconds: 60), (timer) {
       pp('\n\n$mm Timer tick #${timer.tick} - _filterCommuterRequests ...');
-      _filterCommuterRequests(commuterRequests);
+      _filterEverything();
     });
     pp('\n\n$mm  Ambassador Timer initialized for 🌀 60 seconds per tick🌀');
   }
 
+  _filterEverything() {
+    _filterDispatches(dispatches);
+    _filterPassengerCounts(passengerCounts);
+    _filterCommuterRequests(commuterRequests);
+    _filterCommuterCashPayments(commuterCashPayments);
+    _filterCommuterCashCheckIns(commuterCashCheckIns);
+    _filterRankFeeCashPayments(rankFeeCashPayments);
+    _filterRankFeeCashCheckIns(rankFeeCashCheckIns);
+    _filterTrips(trips);
+    _filterVehicleArrivals(vehicleArrivals);
+  }
   void _getCommuterRequests() async {
-    var date = DateTime.now().toUtc().subtract(const Duration(hours: 1));
+    var date = DateTime.now().toUtc().subtract(Duration(hours: filterHours));
     commuterRequests = await listApiDog.getRouteCommuterRequests(
         routeId: route!.routeId!, startDate: date.toIso8601String());
     if (mounted) {
@@ -470,7 +482,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
       var difference = now.difference(date);
       pp('$mm _filterCommuterRequests difference: $difference');
 
-      if (difference <= const Duration(hours: 1)) {
+      if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
@@ -881,6 +893,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
                   .subtract(const Duration(hours: 24))
                   .toIso8601String();
               endDate = DateTime.now().toUtc().toIso8601String();
+              filterHours = 24;
               _getData();
             }
             if (index == 1) {
@@ -890,11 +903,14 @@ class OfficialDashboardState extends State<OfficialDashboard>
                   .subtract(const Duration(days: 7))
                   .toIso8601String();
               endDate = DateTime.now().toUtc().toIso8601String();
+              filterHours = 24 * 7;
               _getData();
             }
             if (index == 2) {
               pp('$mm bottomNavigationBar: build start - end search ');
               await _getDate(true);
+              var diff = DateTime.parse(endDate!).difference(DateTime.parse(startDate!)).inHours;
+              filterHours = diff;
               _getData();
             }
           },
