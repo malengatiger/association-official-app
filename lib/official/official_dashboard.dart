@@ -846,47 +846,6 @@ class OfficialDashboardState extends State<OfficialDashboard>
               ],
             ),
           ),
-          commuterRequests.isNotEmpty
-              ? Positioned(
-                  top: 64,
-                  right: 16,
-                  left: 16,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Commuters on the route',
-                          style: myTextStyle(
-                              weight: FontWeight.w900,
-                              fontSize: 12,
-                              color: Colors.grey)),
-                      gapW16,
-                      bd.Badge(
-                        badgeContent: Text('${_getPassengers()}',
-                            style: myTextStyle(color: Colors.white)),
-                        badgeStyle: bd.BadgeStyle(
-                            padding: EdgeInsets.all(12),
-                            badgeColor: Colors.red.shade700),
-                        onTap: () {
-                          _navigateToRouteMap();
-                        },
-                      ),
-                      gapW8,
-                      Text('Requests',
-                          style: myTextStyle(
-                              weight: FontWeight.w900,
-                              fontSize: 12,
-                              color: Colors.grey)),
-                      gapW8,
-                      bd.Badge(
-                        badgeContent: Text('${commuterRequests.length}',
-                            style: myTextStyle(color: Colors.white)),
-                        badgeStyle: bd.BadgeStyle(
-                            padding: EdgeInsets.all(12),
-                            badgeColor: Colors.grey.shade500),
-                      ),
-                    ],
-                  ))
-              : gapW32,
           route == null
               ? gapW32
               : Positioned(
