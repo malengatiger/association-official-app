@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:badges/badges.dart' as bd;
+import 'package:association_official_app/official/car_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart';
 import 'package:kasie_transie_library/bloc/data_api_dog.dart';
 import 'package:kasie_transie_library/bloc/list_api_dog.dart';
 import 'package:kasie_transie_library/data/commuter_cash_check_in.dart';
@@ -19,11 +20,8 @@ import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/utils/prefs.dart';
 import 'package:kasie_transie_library/widgets/ambassador/association_vehicle_photo_handler.dart';
-import 'package:kasie_transie_library/widgets/ambassador/cars_for_ambassador.dart';
-import 'package:kasie_transie_library/widgets/ambassador/routes_for_ambassador.dart';
 import 'package:kasie_transie_library/widgets/dash_widgets/generic.dart';
-import 'package:kasie_transie_library/widgets/vehicle_passenger_count.dart';
-import 'package:uuid/uuid.dart';
+import 'package:kasie_transie_library/widgets/vehicle_widgets/vehicle_search.dart';
 
 class OfficialDashboard extends StatefulWidget {
   const OfficialDashboard({super.key, required this.association});
@@ -108,14 +106,14 @@ class OfficialDashboardState extends State<OfficialDashboard>
 
     commuterRequestSub = fcmService.commuterRequestStream.listen((req) {
       commuterRequests.add(req);
-      _filterCommuterRequests(commuterRequests);
+      // _filterCommuterRequests(commuterRequests);
       if (mounted) {
         setState(() {});
       }
     });
     dispatchSub = fcmService.dispatchStream.listen((dr) {
       dispatches.add(dr);
-      _filterDispatches(dispatches);
+      // _filterDispatches(dispatches);
       if (mounted) {
         setState(() {});
       }
@@ -123,7 +121,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
     passengerCountSub =
         fcmService.passengerCountStream.listen((passengerCount) {
       passengerCounts.add(passengerCount);
-      _filterPassengerCounts(passengerCounts);
+      // _filterPassengerCounts(passengerCounts);
       if (mounted) {
         setState(() {});
       }
@@ -131,7 +129,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
     commuterCashPaymentSub =
         fcmService.commuterCashPaymentStream.listen((payment) {
       commuterCashPayments.add(payment);
-      _filterCommuterCashPayments(commuterCashPayments);
+      // _filterCommuterCashPayments(commuterCashPayments);
       if (mounted) {
         setState(() {});
       }
@@ -139,7 +137,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
     commuterCashCheckInSub =
         fcmService.commuterCashCheckInStream.listen((checkIn) {
       commuterCashCheckIns.add(checkIn);
-      _filterCommuterCashCheckIns(commuterCashCheckIns);
+      // _filterCommuterCashCheckIns(commuterCashCheckIns);
       if (mounted) {
         setState(() {});
       }
@@ -147,7 +145,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
     rankFeeCashCheckInSub =
         fcmService.rankFeeCashCheckInStream.listen((checkIn) {
       rankFeeCashCheckIns.add(checkIn);
-      _filterRankFeeCashCheckIns(rankFeeCashCheckIns);
+      // _filterRankFeeCashCheckIns(rankFeeCashCheckIns);
       if (mounted) {
         setState(() {});
       }
@@ -155,7 +153,7 @@ class OfficialDashboardState extends State<OfficialDashboard>
     rankFeeCashPaymentSub =
         fcmService.rankFeeCashPaymentStream.listen((payment) {
       rankFeeCashPayments.add(payment);
-      _filterCommuterCashPayments(commuterCashPayments);
+      // _filterCommuterCashPayments(commuterCashPayments);
       if (mounted) {
         setState(() {});
       }
@@ -170,14 +168,14 @@ class OfficialDashboardState extends State<OfficialDashboard>
     //
     telemetrySub = fcmService.vehicleTelemetryStream.listen((trip) {
       vehicleTelemetry.add(trip);
-      _filterTelemetry(vehicleTelemetry);
+      // _filterTelemetry(vehicleTelemetry);
       if (mounted) {
         setState(() {});
       }
     });
     vehicleArrivalSub = fcmService.vehicleArrivalStream.listen((trip) {
       vehicleArrivals.add(trip);
-      _filterVehicleArrivals(vehicleArrivals);
+      // _filterVehicleArrivals(vehicleArrivals);
       if (mounted) {
         setState(() {});
       }
@@ -199,6 +197,11 @@ class OfficialDashboardState extends State<OfficialDashboard>
           lastDate: DateTime.now().add(Duration(days: 365)),
           barrierDismissible: false,
         );
+        var dt = DateTime(
+            startDateTime!.year, startDateTime!.month, startDateTime!.day);
+        startDateTime = dt;
+        startDate = startDateTime!.toIso8601String();
+        pp('$mm check start time; startDateTime: $startDate');
         _getDate(false);
       } else {
         endDateTime = await showDatePicker(
@@ -209,28 +212,14 @@ class OfficialDashboardState extends State<OfficialDashboard>
           lastDate: DateTime.now().add(Duration(days: 365)),
           barrierDismissible: false,
         );
-      }
-    }
-  }
+        var dt = DateTime(endDateTime!.year, endDateTime!.month,
+            endDateTime!.day, 23, 59, 59);
+        endDateTime = dt;
+        endDate = endDateTime!.toIso8601String();
 
-  _getTime({required bool isStartDate}) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    if (mounted) {
-      if (isStartDate) {
-        startTimeOfDay = await showTimePicker(
-            barrierDismissible: false,
-            context: context,
-            initialTime: TimeOfDay.now());
-        _getDate(true);
-        return;
-      } else {
-        endTimeOfDay = await showTimePicker(
-            barrierDismissible: false,
-            context: context,
-            initialTime: TimeOfDay.now());
-
-        setState(() {});
+        pp('$mm check end time; endDateTime: $endDate');
       }
+      setState(() {});
     }
   }
 
@@ -253,13 +242,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in counts) {
       var date = DateTime.parse(r.created!);
       var difference = now.difference(date);
-      pp('$mm _filterVehicleArrivals difference: $difference');
+      // pp('$mm _filterVehicleArrivals difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterVehicleArrivals filtered: ${filtered.length}');
+    pp('$mm _filterVehicleArrivals filtered: 🍑 ${filtered.length}');
     setState(() {
       vehicleArrivals = filtered;
     });
@@ -275,13 +264,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in counts) {
       var date = DateTime.parse(r.created!);
       var difference = now.difference(date);
-      pp('$mm _filterTelemetry difference: $difference');
+      // pp('$mm _filterTelemetry difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterTelemetry filtered: ${filtered.length}');
+    pp('$mm _filterTelemetry filtered: 🍑 ${filtered.length}');
     setState(() {
       vehicleTelemetry = filtered;
     });
@@ -296,13 +285,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in counts) {
       var date = DateTime.parse(r.created!);
       var difference = now.difference(date);
-      pp('$mm _filterTrips difference: $difference');
+      // pp('$mm _filterTrips difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterTrips filtered: ${filtered.length}');
+    pp('$mm _filterTrips filtered: 🍑 ${filtered.length}');
     setState(() {
       trips = filtered;
     });
@@ -318,13 +307,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in counts) {
       var date = DateTime.parse(r.created!);
       var difference = now.difference(date);
-      pp('$mm _filterRankFeeCashCheckIns difference: $difference');
+      // pp('$mm _filterRankFeeCashCheckIns difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterRankFeeCashCheckIns filtered: ${filtered.length}');
+    pp('$mm _filterRankFeeCashCheckIns filtered: 🍑 ${filtered.length}');
     setState(() {
       rankFeeCashCheckIns = filtered;
     });
@@ -340,13 +329,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in counts) {
       var date = DateTime.parse(r.created!);
       var difference = now.difference(date);
-      pp('$mm _filterRankFeeCashPayments difference: $difference');
+      // pp('$mm _filterRankFeeCashPayments difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterPassengerCounts filtered: ${filtered.length}');
+    pp('$mm _filterPassengerCounts filtered: 🍑 ${filtered.length}');
     setState(() {
       rankFeeCashPayments = filtered;
     });
@@ -362,13 +351,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in counts) {
       var date = DateTime.parse(r.created!);
       var difference = now.difference(date);
-      pp('$mm _filterCommuterCashCheckIns difference: $difference');
+      // pp('$mm _filterCommuterCashCheckIns difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterCommuterCashCheckIns filtered: ${filtered.length}');
+    pp('$mm _filterCommuterCashCheckIns filtered: 🍑 ${filtered.length}');
     setState(() {
       commuterCashCheckIns = filtered;
     });
@@ -384,13 +373,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in counts) {
       var date = DateTime.parse(r.created!);
       var difference = now.difference(date);
-      pp('$mm _filterCommuterCashPayments difference: $difference');
+      // pp('$mm _filterCommuterCashPayments difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterCommuterCashPayments filtered: ${filtered.length}');
+    pp('$mm _filterCommuterCashPayments filtered: 🍑 ${filtered.length}');
     setState(() {
       commuterCashPayments = filtered;
     });
@@ -406,20 +395,21 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in counts) {
       var date = DateTime.parse(r.created!);
       var difference = now.difference(date);
-      pp('$mm _filterPassengerCounts difference: $difference');
+      // pp('$mm _filterPassengerCounts difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterPassengerCounts filtered: ${filtered.length}');
+    pp('$mm _filterPassengerCounts filtered: 🍑 ${filtered.length}');
     setState(() {
       passengerCounts = filtered;
     });
     return filtered;
   }
 
-  int filterHours= 24;
+  int filterHours = 24;
+
   List<lib.DispatchRecord> _filterDispatches(
       List<lib.DispatchRecord> requests) {
     pp('$mm _filterDispatches arrived: ${requests.length}');
@@ -429,13 +419,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in requests) {
       var date = DateTime.parse(r.created!);
       var difference = now.difference(date);
-      pp('$mm filterDispatchRecord difference: $difference');
+      // pp('$mm filterDispatchRecord difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterDispatches filtered: ${filtered.length}');
+    pp('$mm _filterDispatches filtered: 🍑 ${filtered.length}');
     setState(() {
       dispatches = filtered;
     });
@@ -452,16 +442,17 @@ class OfficialDashboardState extends State<OfficialDashboard>
   }
 
   _filterEverything() {
-    _filterDispatches(dispatches);
-    _filterPassengerCounts(passengerCounts);
-    _filterCommuterRequests(commuterRequests);
-    _filterCommuterCashPayments(commuterCashPayments);
-    _filterCommuterCashCheckIns(commuterCashCheckIns);
-    _filterRankFeeCashPayments(rankFeeCashPayments);
-    _filterRankFeeCashCheckIns(rankFeeCashCheckIns);
-    _filterTrips(trips);
-    _filterVehicleArrivals(vehicleArrivals);
+    // _filterDispatches(dispatches);
+    // _filterPassengerCounts(passengerCounts);
+    // _filterCommuterRequests(commuterRequests);
+    // _filterCommuterCashPayments(commuterCashPayments);
+    // _filterCommuterCashCheckIns(commuterCashCheckIns);
+    // _filterRankFeeCashPayments(rankFeeCashPayments);
+    // _filterRankFeeCashCheckIns(rankFeeCashCheckIns);
+    // _filterTrips(trips);
+    // _filterVehicleArrivals(vehicleArrivals);
   }
+
   void _getCommuterRequests() async {
     var date = DateTime.now().toUtc().subtract(Duration(hours: filterHours));
     commuterRequests = await listApiDog.getRouteCommuterRequests(
@@ -480,13 +471,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
     for (var r in requests) {
       var date = DateTime.parse(r.dateRequested!);
       var difference = now.difference(date);
-      pp('$mm _filterCommuterRequests difference: $difference');
+      // pp('$mm _filterCommuterRequests difference: $difference');
 
       if (difference <= Duration(hours: filterHours)) {
         filtered.add(r);
       }
     }
-    pp('$mm _filterCommuterRequests filtered: ${filtered.length}');
+    pp('$mm _filterCommuterRequests filtered: 🍑 ${filtered.length}');
     setState(() {
       commuterRequests = filtered;
     });
@@ -510,142 +501,35 @@ class OfficialDashboardState extends State<OfficialDashboard>
   }
 
   _signIn() async {
+    pp('\n\n$mm ... signing in ...');
     if (user != null) {
+      pp('\n\n$mm ... user is not null, going to auth  ...');
       var u = await auth.FirebaseAuth.instance.signInWithEmailAndPassword(
           email: user!.email!, password: user!.password!);
       if (u.user != null) {
+        pp('\n\n$mm ... auth user is not null, off to Cleveland! ...');
         pp('$mm user has signed in');
         _initializeTimer();
+        _buildDefaultPeriod();
         _getData();
-        if (mounted) {
-          showOKToast(
-              duration: const Duration(seconds: 2),
-              message: 'User signed in successfully!',
-              context: context);
-        }
+        // if (mounted) {
+        //   showOKToast(
+        //       duration: const Duration(seconds: 2),
+        //       message: 'User signed in successfully!',
+        //       context: context);
+        // }
       }
+    } else {
+      pp('$mm user is null! WTF?');
     }
   }
 
-  _navigateToRoutes() async {
-    route = await NavigationUtils.navigateTo(
-        context: context,
-        widget: NearestRoutesList(
-          associationId: widget.association.associationId!,
-          title: 'Ambassador Routes',
-        ));
-
-    if (route != null) {
-      prefs.saveRoute(route!);
-      _getCommuterRequests();
-      _navigateToCarSearch(route!);
-    }
-  }
-
-  _confirmCar() {
-    showDialog(
-        context: context,
-        builder: (ctx) {
-          return AlertDialog(
-              content: SizedBox(
-                  height: 140,
-                  child: Column(
-                    children: [
-                      gapH16,
-                      Text('Do you want to work in your previous taxi?  '),
-                      gapH32,
-                      Text(
-                        ' ${car!.vehicleReg}',
-                        style:
-                            myTextStyle(fontSize: 32, weight: FontWeight.w900),
-                      )
-                    ],
-                  )),
-              actions: [
-                TextButton(
-                    onPressed: () async {
-                      Navigator.of(context).pop();
-                      car = await NavigationUtils.navigateTo(
-                          context: context,
-                          widget: CarForAmbassador(
-                            associationId: widget.association.associationId!,
-                          ));
-
-                      if (car != null) {
-                        trip = await _getTrip(route!, car!);
-                        prefs.saveCar(car!);
-                        _navigateToPassengerCount(route!, car!);
-                      }
-                    },
-                    child: const Text('No')),
-                TextButton(
-                    onPressed: () async {
-                      trip = await _getTrip(route!, car!);
-                      if (mounted) {
-                        Navigator.of(context).pop();
-                        _navigateToPassengerCount(route!, car!);
-                      }
-                    },
-                    child: const Text('Yes')),
-              ]);
-        });
-  }
-
-  _navigateToCarSearch(lib.Route route) async {
-    if (car != null) {
-      _confirmCar();
-      return;
-    }
-    car = await NavigationUtils.navigateTo(
-        context: context,
-        widget: CarForAmbassador(
-          associationId: widget.association.associationId!,
-        ));
-
-    if (car != null) {
-      trip = await _getTrip(route, car!);
-      prefs.saveCar(car!);
-      _navigateToPassengerCount(route, car!);
-    }
-  }
-
-  _navigateToPassengerCount(lib.Route route, lib.Vehicle vehicle) async {
-    trip ??= await _getTrip(route, vehicle);
-    if (mounted) {
-      NavigationUtils.navigateTo(
-          context: context,
-          widget: VehiclePassengerCount(
-            vehicle: vehicle,
-            route: route,
-            trip: trip!,
-          ));
-    }
-  }
-
-  Future<lib.Trip?> _getTrip(lib.Route route, lib.Vehicle vehicle) async {
-    var loc = await deviceLocationBloc.getLocation();
-    var user = prefs.getUser();
-    lib.Trip? trip;
-    if (user != null) {
-      trip = lib.Trip(
-          tripId: Uuid().v4().toString(),
-          userId: user.userId!,
-          userName: '${user.firstName} ${user.lastName}',
-          dateStarted: DateTime.now().toUtc().toIso8601String(),
-          dateEnded: null,
-          routeId: route.routeId!,
-          routeName: route.name!,
-          vehicleId: car!.vehicleId,
-          vehicleReg: car!.vehicleReg,
-          associationId: widget.association.associationId!,
-          associationName: widget.association.associationName,
-          position: lib.Position(
-              coordinates: [loc.longitude, loc.latitude], type: 'Point'),
-          created: DateTime.now().toUtc().toIso8601String());
-      dataApi.addTrip(trip);
-      fcmService.subscribeForAmbassador(route, 'Ambassador');
-    }
-    return trip;
+  void _buildDefaultPeriod() {
+    var d1 = DateTime.now();
+    var d2 = DateTime(d1.year, d1.month, d1.day);
+    startDate = d2.toIso8601String();
+    var d3 = DateTime(d1.year, d1.month, d1.day, 23, 59, 50);
+    endDate = d3.toIso8601String();
   }
 
   _navigateToAssociationPhotos() {
@@ -656,24 +540,24 @@ class OfficialDashboardState extends State<OfficialDashboard>
   String? startDate, endDate;
   bool busy = false;
   lib.AssociationData? associationData;
+  lib.Association? association;
 
   void _getData() async {
     pp('\n\n$mm  ........... getting association data bundle .... $startDate  - $endDate');
     setState(() {
       busy = true;
     });
-    startDate ??= DateTime.now()
-        .toUtc()
-        .subtract(const Duration(hours: 24))
-        .toIso8601String();
-    endDate ??= DateTime.now().toUtc().toIso8601String();
+    var sd = DateTime.parse(startDate!).toUtc().toIso8601String();
+    var ed = DateTime.parse(endDate!).toUtc().toIso8601String();
+    pp('\n\n$mm  ........... getting association data bundle; UTC format: .... $sd  - $ed');
 
     var user = prefs.getUser();
+    association = prefs.getAssociation();
     associationData = await listApiDog.getAssociationData(
-        associationId: user!.associationId!,
-        startDate: startDate!,
-        endDate: endDate!);
+        associationId: user!.associationId!, startDate: sd, endDate: ed);
+
     if (associationData != null) {
+      pp('$mm associationData is cool  ...');
       users = associationData!.users;
       vehicles = associationData!.vehicles;
       routes = associationData!.routes;
@@ -684,7 +568,17 @@ class OfficialDashboardState extends State<OfficialDashboard>
       totalCashCheckIn = _getCommuterCashCheckIn();
       totalRankFeeCheckIn = _getRankFeeCashCheckIn();
       totalDispatchedPassengers = _getDispatchedPassengers();
+
+      dispatches = associationData!.dispatchRecords;
+      commuterRequests = associationData!.commuterRequests;
+      trips = associationData!.trips;
+      commuterCashPayments = associationData!.commuterCashPayments;
     }
+    routes.sort((a, b) => a.name!.compareTo(b.name!));
+    for (var r in routes) {
+      pp('$mm routeId: ${r.routeId} - ${r.name} ');
+    }
+    pp('$mm setting state ...');
     setState(() {
       busy = false;
     });
@@ -740,6 +634,13 @@ class OfficialDashboardState extends State<OfficialDashboard>
 
   @override
   Widget build(BuildContext context) {
+    DateFormat df = DateFormat.MMMMEEEEd();
+    String? start, end;
+    if (startDate != null) {
+      start = '${df.format(DateTime.parse(startDate!))} : 00: 00';
+      end = '${df.format(DateTime.parse(endDate!))} : 23:59';
+    }
+
     return Scaffold(
       appBar: AppBar(
           title: Text('Association Official', style: myTextStyle()),
@@ -766,11 +667,49 @@ class OfficialDashboardState extends State<OfficialDashboard>
                             color: Colors.grey.shade400,
                             fontSize: 16,
                             weight: FontWeight.w700)),
-                gapH32,
-                // Padding(
-                //   padding: EdgeInsets.all(16),
-                //   child: DashElements(isGrid: false),
-                // ),
+                startDate == null
+                    ? gapW32
+                    : Padding(
+                        padding: EdgeInsets.all(16),
+                        child: SizedBox(
+                          height: 48,
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  SizedBox(
+                                    width: 60,
+                                    child: Text('Starting',
+                                        style: myTextStyle(
+                                            color: Colors.grey,
+                                            weight: FontWeight.w900)),
+                                  ),
+                                  Text(start ?? '',
+                                      style: myTextStyle(
+                                          color: Colors.grey,
+                                          weight: FontWeight.normal)),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  SizedBox(
+                                    width: 60,
+                                    child: Text(
+                                      'Ending',
+                                      style: myTextStyle(
+                                          color: Colors.grey,
+                                          weight: FontWeight.w900),
+                                    ),
+                                  ),
+                                  Text(end ?? '',
+                                      style: myTextStyle(
+                                          color: Colors.grey,
+                                          weight: FontWeight.normal)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        )),
                 Expanded(
                   child: Center(
                     child: Column(
@@ -782,11 +721,26 @@ class OfficialDashboardState extends State<OfficialDashboard>
                                   crossAxisCount: 2),
                           children: [
                             TotalWidget(
+                                caption: 'Trips',
+                                number: trips.length,
+                                color: Colors.green,
+                                onTapped: () {
+                                  pp('$mm trips tapped');
+                                }),
+                            TotalWidget(
                                 caption: 'Passengers In',
                                 number: totalPassengersIn,
                                 color: Colors.green,
                                 onTapped: () {
                                   pp('$mm totalPassengersIn tapped');
+                                }),
+                            TotalWidget(
+                                caption: 'Vehicles',
+                                number: vehicles.length,
+                                color: Colors.grey,
+                                onTapped: () {
+                                  pp('$mm vehicles tapped');
+                                  _navigateToCars();
                                 }),
                             TotalWidget(
                                 caption: 'Passenger Cash Payments',
@@ -841,13 +795,6 @@ class OfficialDashboardState extends State<OfficialDashboard>
                                 onTapped: () {
                                   pp('$mm users tapped');
                                 }),
-                            TotalWidget(
-                                caption: 'Vehicles',
-                                number: vehicles.length,
-                                color: Colors.grey,
-                                onTapped: () {
-                                  pp('$mm vehicles tapped');
-                                }),
                           ],
                         )),
                         gapH32,
@@ -858,29 +805,6 @@ class OfficialDashboardState extends State<OfficialDashboard>
               ],
             ),
           ),
-          route == null
-              ? gapW32
-              : Positioned(
-                  bottom: 2,
-                  right: 24,
-                  child: SizedBox(
-                      height: 140,
-                      child: Column(
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              route = prefs.getRoute();
-                              setState(() {});
-                              _navigateToCarSearch(route!);
-                            },
-                            child: Text('${route!.name}',
-                                style: myTextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 18,
-                                    weight: FontWeight.w900)),
-                          ),
-                        ],
-                      ))),
         ]),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -909,7 +833,9 @@ class OfficialDashboardState extends State<OfficialDashboard>
             if (index == 2) {
               pp('$mm bottomNavigationBar: build start - end search ');
               await _getDate(true);
-              var diff = DateTime.parse(endDate!).difference(DateTime.parse(startDate!)).inHours;
+              var diff = DateTime.parse(endDate!)
+                  .difference(DateTime.parse(startDate!))
+                  .inHours;
               filterHours = diff;
               _getData();
             }
@@ -918,17 +844,41 @@ class OfficialDashboardState extends State<OfficialDashboard>
             BottomNavigationBarItem(
                 backgroundColor: Colors.white,
                 label: 'Past 24 Hours',
-                icon: FaIcon(FontAwesomeIcons.clock, color: Colors.pink,)),
+                icon: FaIcon(
+                  FontAwesomeIcons.clock,
+                  color: Colors.pink,
+                )),
             BottomNavigationBarItem(
                 backgroundColor: Colors.teal,
                 label: 'Past Week',
-                icon: FaIcon(FontAwesomeIcons.arrowsRotate, color: Colors.grey,)),
+                icon: FaIcon(
+                  FontAwesomeIcons.arrowsRotate,
+                  color: Colors.grey,
+                )),
             BottomNavigationBarItem(
                 backgroundColor: Colors.white,
                 label: 'Search Period',
-                icon: FaIcon(FontAwesomeIcons.magnifyingGlass, color: Colors.blue,)),
+                icon: FaIcon(
+                  FontAwesomeIcons.magnifyingGlass,
+                  color: Colors.blue,
+                )),
           ]),
     );
+  }
+
+  void _navigateToCars() async {
+    lib.Vehicle? car = await NavigationUtils.navigateTo(
+        context: context,
+        widget: VehicleSearch(
+          associationId: association!.associationId!,
+        ));
+    if (car != null) {
+      pp('$mm car selected: ${car.toJson()}');
+      if (mounted) {
+        NavigationUtils.navigateTo(
+            context: context, widget: CarOperations(car: car));
+      }
+    }
   }
 
   void _navigateToRouteMap() {
