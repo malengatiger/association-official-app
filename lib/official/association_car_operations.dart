@@ -20,16 +20,19 @@ import 'package:kasie_transie_library/widgets/timer_widget.dart';
 import 'package:badges/badges.dart' as bd;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_messaging/firebase_messaging.dart' as msg;
-class CarOperations extends StatefulWidget {
-  const CarOperations({super.key, required this.car});
+import 'package:kasie_transie_library/widgets/vehicle_widgets/vehicle_search.dart';
 
-  final lib.Vehicle car;
+class AssociationCarOperations extends StatefulWidget {
+  const AssociationCarOperations({super.key, required this.association});
+
+  final lib.Association association;
 
   @override
-  CarOperationsState createState() => CarOperationsState();
+  AssociationCarOperationsState createState() =>
+      AssociationCarOperationsState();
 }
 
-class CarOperationsState extends State<CarOperations>
+class AssociationCarOperationsState extends State<AssociationCarOperations>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   List<lib.DispatchRecord> dispatches = [];
@@ -55,10 +58,9 @@ class CarOperationsState extends State<CarOperations>
   late StreamSubscription<lib.VehicleArrival> vehicleArrivalSub;
   late StreamSubscription<lib.LocationResponse> locationResponselSub;
 
-
   int filterHours = 24;
   late Timer timer;
-  static const mm = "🍉🍉🍉🍉 CarOperations 🍉";
+  static const mm = "🍉🍉🍉🍉 AssociationCarOperations 🍉";
   bool busy = false;
   lib.VehicleData? vehicleData;
   ListApiDog listApiDog = GetIt.instance<ListApiDog>();
@@ -75,10 +77,13 @@ class CarOperationsState extends State<CarOperations>
     super.initState();
     startDate =
         DateTime.now().subtract(Duration(hours: filterHours)).toIso8601String();
-    endDate = DateTime.now().toIso8601String();
+
+    var dt = DateTime.now();
+    endDate = DateTime(dt.year, dt.month, dt.day, 23, 59, 59).toIso8601String();
+
     _setUpFCMMessaging();
     pp('$mm Car operations for this car: ');
-    myPrettyJsonPrint(widget.car.toJson());
+    myPrettyJsonPrint(widget.association.toJson());
     _startTimer();
     _getData();
   }
@@ -173,14 +178,15 @@ class CarOperationsState extends State<CarOperations>
     locationResponselSub = fcmService.locationResponseStream.listen((response) {
       pp('\n$mm stream delivered locationResponse: ');
       myPrettyJsonPrint(response.toJson());
-      _navigateToMap(response);
+      // _navigateToMap(response);
     });
   }
 
-  void _navigateToMap(lib.LocationResponse response) async {
+  void _navigateToMap(
+      lib.LocationResponse response, lib.Vehicle vehicle) async {
     pp('\n$mm stream delivered locationResponse: ');
-    NavigationUtils.navigateTo(context: context, widget: VehicleMonitorMap(vehicle: widget.car));
-
+    NavigationUtils.navigateTo(
+        context: context, widget: VehicleMonitorMap(vehicle: vehicle));
   }
 
   _startTimer() {
@@ -190,62 +196,178 @@ class CarOperationsState extends State<CarOperations>
     });
   }
 
-  _getData() async {
-    pp('$mm ................................... refresh data ...');
+  lib.AssociationData? associationData;
+
+  List<lib.User> users = [];
+  List<lib.Vehicle> vehicles = [];
+  List<lib.Route> routes = [];
+  List<lib.CommuterRequest> commuterRequests = [];
+  List<RankFeeCashCheckIn> rankFeeCashCheckIns = [];
+
+  int totalPassengersIn = 0;
+  int totalPassengersRequests = 0;
+  int totalDispatchedPassengers = 0;
+
+  double totalCommuterCash = 0.00;
+  double totalRankFeeCash = 0.00;
+  double totalCashCheckIn = 0.00;
+  double totalRankFeeCheckIn = 0.00;
+
+  void _getData() async {
+    pp('\n\n$mm  ........... getting association data bundle .... $startDate  - $endDate');
     setState(() {
       busy = true;
     });
+    var sd = DateTime.parse(startDate!).toUtc().toIso8601String();
+    var ed = DateTime.parse(endDate!).toUtc().toIso8601String();
+    pp('\n\n$mm  ........... getting association data bundle; UTC format: .... $sd  - $ed');
+
     try {
-      vehicleData = await listApiDog.getVehicleData(
-          vehicleId: widget.car.vehicleId!,
-          startDate: DateTime.parse(startDate!).toUtc().toIso8601String(),
-          endDate: DateTime.parse(endDate!).toUtc().toIso8601String());
-      createLists();
+      associationData = await listApiDog.getAssociationData(
+          associationId: widget.association.associationId!,
+          startDate: sd,
+          endDate: ed);
+
+      if (associationData != null) {
+        pp('$mm associationData is cool  ...');
+        _createLists();
+        users = associationData!.users;
+        vehicles = associationData!.vehicles;
+        routes = associationData!.routes;
+        totalPassengersIn = _getPassengers();
+        totalRankFeeCash = _getRankFees();
+        totalCommuterCash = _getCommuterCash();
+        totalPassengersRequests = _getPassengersRequests();
+        totalCashCheckIn = _getCommuterCashCheckIn();
+        totalRankFeeCheckIn = _getRankFeeCashCheckIn();
+        totalDispatchedPassengers = _getDispatchedPassengers();
+        dispatches = associationData!.dispatchRecords;
+        commuterRequests = associationData!.commuterRequests;
+        trips = associationData!.trips;
+        commuterCashPayments = associationData!.commuterCashPayments;
+      }
+      routes.sort((a, b) => a.name!.compareTo(b.name!));
+
+      pp('$mm  dispatches: ${dispatches.length}');
+      pp('$mm trips: ${trips.length}');
+      pp('$mm commuterRequests: ${commuterRequests.length}');
+      pp('$mm  totalPassengersIn: $totalPassengersIn');
+      pp('$mm totalCommuterCash: $totalCommuterCash');
+      pp('$mm totalPassengersRequests: $totalPassengersRequests');
+      pp('$mm totalDispatchedPassengers: $totalDispatchedPassengers');
+      pp('$mm totalRankFeeCash: $totalRankFeeCash');
+      pp('$mm totalCashCheckIn: $totalCashCheckIn');
+      pp('$mm totalRankFeeCheckIn: $totalRankFeeCheckIn');
+      pp('$mm users: ${users.length} cars: ${vehicles.length} routes: ${routes.length}');
+
+      pp('$mm ........................................................... Are we good?');
     } catch (e, s) {
       pp('$e $s');
-      if (mounted) {
-        showErrorToast(message: '$e', context: context);
-      }
     }
+
+    pp('$mm setting state ...');
     setState(() {
       busy = false;
     });
   }
 
-  Future<void> createLists() async {
-    setState(() {
-      dispatches.clear();
-    });
-    for (var dr in vehicleData!.dispatchRecords) {
+  int _getPassengers() {
+    var cnt = 0;
+    for (var cr in commuterRequests) {
+      cnt += cr.numberOfPassengers!;
+    }
+    pp('$mm _getPassengers: $cnt');
+
+    return cnt;
+  }
+
+  int _getDispatchedPassengers() {
+    var tot = 0;
+    for (var value in dispatches) {
+      tot += value.passengers!;
+    }
+    pp('$mm _getDispatchedPassengers: $tot');
+
+    return tot;
+  }
+
+  double _getRankFeeCashCheckIn() {
+    var tot = 0.00;
+    for (var value in rankFeeCashCheckIns) {
+      tot += value.amount!;
+    }
+    pp('$mm _getRankFeeCashCheckIn: $tot');
+
+    return tot;
+  }
+
+  List<CommuterCashCheckIn> commuterCashCheckIns = [];
+
+  double _getCommuterCashCheckIn() {
+    totalCashCheckIn = 0.00;
+    for (var value in commuterCashCheckIns) {
+      totalCashCheckIn += value.amount!;
+    }
+    pp('$mm _getCommuterCashCheckIn: $totalCashCheckIn');
+
+    return totalCashCheckIn;
+  }
+
+  int _getPassengersRequests() {
+    totalPassengersRequests = 0;
+    for (var value in commuterRequests) {
+      totalPassengersRequests += value.numberOfPassengers!;
+    }
+    pp('$mm _getPassengersRequests: $totalPassengersRequests');
+
+    return totalPassengersRequests;
+  }
+
+  double _getCommuterCash() {
+    totalCommuterCash = 0.00;
+    for (var value in commuterCashPayments) {
+      totalCommuterCash += value.amount!;
+    }
+    pp('$mm _getCommuterCash: $totalCommuterCash');
+
+    return totalCommuterCash;
+  }
+
+  double _getRankFees() {
+    totalRankFeeCash = 0.00;
+    for (var value in rankFeeCashPayments) {
+      totalRankFeeCash += value.amount!;
+    }
+    pp('$mm _getRankFees: $totalRankFeeCash');
+
+    return totalRankFeeCash;
+  }
+
+  Future<void> _createLists() async {
+    dispatches.clear();
+    for (var dr in associationData!.dispatchRecords) {
       dispatches.add(dr);
     }
-    setState(() {
-      trips.clear();
-    });
-    for (var dr in vehicleData!.trips) {
+    trips.clear();
+
+    for (var dr in associationData!.trips) {
       trips.add(dr);
     }
 
-    setState(() {
-      passengerCounts.clear();
-    });
-    for (var dr in vehicleData!.passengerCounts) {
+    passengerCounts.clear();
+    for (var dr in associationData!.passengerCounts) {
       passengerCounts.add(dr);
     }
 
-    setState(() {
-      vehicleTelemetry.clear();
-    });
+    vehicleTelemetry.clear();
 
-    for (var dr in vehicleData!.vehicleTelemetry) {
+    for (var dr in associationData!.vehicleTelemetry) {
       vehicleTelemetry.add(dr);
     }
 
-    setState(() {
-      commuterCashPayments.clear();
-    });
+    commuterCashPayments.clear();
 
-    for (var dr in vehicleData!.commuterCashPayments) {
+    for (var dr in associationData!.commuterCashPayments) {
       commuterCashPayments.add(dr);
     }
 
@@ -253,8 +375,6 @@ class CarOperationsState extends State<CarOperations>
     _getAggregateCommuterCash();
     setState(() {});
   }
-
-  double totalCommuterCash = 0.00;
 
   _getAggregateCommuterCash() {
     totalCommuterCash = 0.0;
@@ -286,18 +406,20 @@ class CarOperationsState extends State<CarOperations>
     return totalPassengers;
   }
 
-  _requestLocation() async {
+  lib.Vehicle? selectedVehicle;
+  _requestLocation(lib.Vehicle car) async {
     pp('$mm request car location ...');
+    selectedVehicle = car;
     var user = prefs.getUser();
     var fcmToken = await msg.FirebaseMessaging.instance.getToken();
     try {
       var lr = lib.LocationRequest(
-          vehicleId: widget.car.vehicleId!,
-          vehicleReg: widget.car.vehicleReg,
+          vehicleId: car.vehicleId!,
+          vehicleReg: car.vehicleReg,
           userId: user!.userId,
           fcmToken: fcmToken,
           userName: '${user.firstName} ${user.lastName}',
-          associationId: user.associationId);
+          associationId: user.associationId, vehicleFcmToken: car.fcmToken);
       var rest = await dataApiDog.addLocationRequest(lr);
       pp('$mm request car location ... ${rest.toJson()}');
       if (mounted) {
@@ -305,14 +427,25 @@ class CarOperationsState extends State<CarOperations>
             duration: const Duration(seconds: 2),
             padding: 24,
             toastGravity: ToastGravity.TOP,
-            message: 'Location requested for ${widget.car.vehicleReg}', context: context);
+            message: 'Location requested for ${car.vehicleReg}',
+            context: context);
       }
-
     } catch (e) {
       pp(e);
       if (mounted) {
         showErrorToast(message: '$e', context: context);
       }
+    }
+  }
+
+  _addLocationRequest() async {
+    selectedVehicle = await NavigationUtils.navigateTo(
+        context: context,
+        widget:
+            VehicleSearch(associationId: widget.association.associationId!));
+    var user = prefs.getUser();
+    if (selectedVehicle != null) {
+      _requestLocation(selectedVehicle!);
     }
   }
 
@@ -327,10 +460,11 @@ class CarOperationsState extends State<CarOperations>
       start = df.format(DateTime.parse(startDate!));
       end = df.format(DateTime.parse(endDate!));
     }
+    var pCounts = passengerCounts.length;
     _getAggregateCommuterCash();
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Car Operations'),
+          title: const Text('Taxi Operations'),
         ),
         body: SafeArea(
             child: Stack(
@@ -344,12 +478,12 @@ class CarOperationsState extends State<CarOperations>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Text('${widget.car.vehicleReg}',
+                            Text('${widget.association.associationName}',
                                 style: myTextStyle(
-                                    weight: FontWeight.w900, fontSize: 36)),
+                                    weight: FontWeight.w900, fontSize: 16)),
                             IconButton(
                                 onPressed: () {
-                                  _requestLocation();
+                                  _addLocationRequest();
                                 },
                                 icon: const FaIcon(
                                     FontAwesomeIcons.mapLocationDot,
@@ -428,7 +562,7 @@ class CarOperationsState extends State<CarOperations>
                               color: Colors.pink,
                               fontSize: 36,
                               weight: FontWeight.w900),
-                          count: totalPassengers,
+                          count: _getTotalPassengers(),
                         ),
                         ActivityPanel(
                           title: 'Telemetry',
@@ -444,37 +578,46 @@ class CarOperationsState extends State<CarOperations>
                               color: Colors.grey,
                               fontSize: 24,
                               weight: FontWeight.normal),
-                          count: passengerCounts.length,
+                          count: pCounts,
                         ),
                         gapH8,
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Text(
-                              'Total Commuter Cash',
-                              style: myTextStyle(
-                                  color: Colors.grey,
-                                  weight: FontWeight.w900,
-                                  fontSize: 16),
-                            ),
-                            Text(
-                              nf.format(totalCommuterCash),
-                              style: myTextStyle(
-                                  weight: FontWeight.w900, fontSize: 28),
-                            ),
-                          ],
-                        ),
+                        SizedBox(
+                          height: 120, width: 600,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Total Commuter Cash',
+                                style: myTextStyle(
+                                    color: Colors.grey,
+                                    weight: FontWeight.w900,
+                                    fontSize: 16),
+                              ),
+                              Card(
+                                elevation: 24,
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Text(
+                                    nf.format(totalCommuterCash),
+                                    style: myTextStyle(
+                                        weight: FontWeight.w900, fontSize: 40),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        )
                       ],
                     )))),
             busy
                 ? Positioned(
-                    bottom: 2,
-                    right: 2,
+                    bottom: 4,
+                    right: 4,
                     child: SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
-                          strokeWidth: 6,
+                          strokeWidth: 2,
                         )),
                   )
                 : gapW32,
@@ -514,7 +657,7 @@ class ActivityPanel extends StatelessWidget {
     return Card(
         elevation: elevation ?? 2,
         child: Padding(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(8),
             child: Row(
               children: [
                 SizedBox(

@@ -644,7 +644,6 @@ class OfficialDashboardState extends State<OfficialDashboard>
     return Scaffold(
       appBar: AppBar(
           title: Text('Association Official', style: myTextStyle()),
-          leading: gapW32,
           actions: [
             IconButton(
                 onPressed: () {

@@ -14,6 +14,7 @@ import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:get_it/get_it.dart';
 import 'package:kasie_transie_library/utils/prefs.dart';
 
+import '../official/starter.dart';
 import 'intro_page_one.dart';
 
 class KasieIntro extends StatefulWidget {
@@ -146,7 +147,7 @@ class KasieIntroState extends State<KasieIntro>
         var ass = prefs.getAssociation();
         NavigationUtils.navigateTo(
           context: context,
-          widget: OfficialDashboard(
+          widget: Starter(
             association: ass!,
           ),
         );
