@@ -20,6 +20,7 @@ import 'package:kasie_transie_library/widgets/timer_widget.dart';
 import 'package:badges/badges.dart' as bd;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_messaging/firebase_messaging.dart' as msg;
+
 class CarOperations extends StatefulWidget {
   const CarOperations({super.key, required this.car});
 
@@ -54,7 +55,6 @@ class CarOperationsState extends State<CarOperations>
   late StreamSubscription<lib.Trip> tripSub;
   late StreamSubscription<lib.VehicleArrival> vehicleArrivalSub;
   late StreamSubscription<lib.LocationResponse> locationResponselSub;
-
 
   int filterHours = 24;
   late Timer timer;
@@ -179,8 +179,8 @@ class CarOperationsState extends State<CarOperations>
 
   void _navigateToMap(lib.LocationResponse response) async {
     pp('\n$mm stream delivered locationResponse: ');
-    NavigationUtils.navigateTo(context: context, widget: VehicleMonitorMap(vehicle: widget.car));
-
+    NavigationUtils.navigateTo(
+        context: context, widget: VehicleMonitorMap(vehicle: widget.car));
   }
 
   _startTimer() {
@@ -297,7 +297,8 @@ class CarOperationsState extends State<CarOperations>
           userId: user!.userId,
           fcmToken: fcmToken,
           userName: '${user.firstName} ${user.lastName}',
-          associationId: user.associationId);
+          associationId: user.associationId,
+          vehicleFcmToken: widget.car.fcmToken);
       var rest = await dataApiDog.addLocationRequest(lr);
       pp('$mm request car location ... ${rest.toJson()}');
       if (mounted) {
@@ -305,9 +306,9 @@ class CarOperationsState extends State<CarOperations>
             duration: const Duration(seconds: 2),
             padding: 24,
             toastGravity: ToastGravity.TOP,
-            message: 'Location requested for ${widget.car.vehicleReg}', context: context);
+            message: 'Location requested for ${widget.car.vehicleReg}',
+            context: context);
       }
-
     } catch (e) {
       pp(e);
       if (mounted) {

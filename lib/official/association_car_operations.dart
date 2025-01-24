@@ -1,11 +1,16 @@
 import 'dart:async';
 
+import 'package:association_official_app/official/vehicle_map.dart';
+import 'package:badges/badges.dart' as bd;
+import 'package:firebase_messaging/firebase_messaging.dart' as msg;
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:kasie_transie_library/bloc/data_api_dog.dart';
 import 'package:kasie_transie_library/bloc/list_api_dog.dart';
+import 'package:kasie_transie_library/bloc/sem_cache.dart';
 import 'package:kasie_transie_library/data/commuter_cash_check_in.dart';
 import 'package:kasie_transie_library/data/commuter_cash_payment.dart';
 import 'package:kasie_transie_library/data/data_schemas.dart' as lib;
@@ -16,10 +21,6 @@ import 'package:kasie_transie_library/messaging/fcm_bloc.dart';
 import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/utils/prefs.dart';
-import 'package:kasie_transie_library/widgets/timer_widget.dart';
-import 'package:badges/badges.dart' as bd;
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:firebase_messaging/firebase_messaging.dart' as msg;
 import 'package:kasie_transie_library/widgets/vehicle_widgets/vehicle_search.dart';
 
 class AssociationCarOperations extends StatefulWidget {
@@ -56,7 +57,8 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
   late StreamSubscription<lib.VehicleTelemetry> telemetrySub;
   late StreamSubscription<lib.Trip> tripSub;
   late StreamSubscription<lib.VehicleArrival> vehicleArrivalSub;
-  late StreamSubscription<lib.LocationResponse> locationResponselSub;
+  late StreamSubscription<lib.LocationResponse> locationResponseSub;
+  late StreamSubscription<lib.LocationResponseError> locationResponseErrorSub;
 
   int filterHours = 24;
   late Timer timer;
@@ -65,6 +67,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
   lib.VehicleData? vehicleData;
   ListApiDog listApiDog = GetIt.instance<ListApiDog>();
   DataApiDog dataApiDog = GetIt.instance<DataApiDog>();
+  SemCache semCache = GetIt.instance<SemCache>();
 
   String? startDate, endDate;
   DateTime? startDateTime, endDateTime;
@@ -175,19 +178,40 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
       myPrettyJsonPrint(arrival.toJson());
       _getData();
     });
-    locationResponselSub = fcmService.locationResponseStream.listen((response) {
-      pp('\n$mm stream delivered locationResponse: ');
+    locationResponseSub =
+        fcmService.locationResponseStream.listen((response) async {
+      pp('\n$mm stream delivered locationResponse:  go to VehicleMonitorMap');
+      myPrettyJsonPrint(response.toJson());
+      var car = await semCache.getVehicle(
+          response.associationId!, response.vehicleId!);
+      if (car != null) {
+        if (mounted) {
+          if (locationResponse != null) {
+            if (locationResponse!.created! != response.created) {
+              _navigateToMap(car, response);
+            }
+          } else {
+            _navigateToMap(car, response);
+          }
+        }
+      }
+    });
+
+    locationResponseErrorSub =
+        fcmService.locationResponseErrorStream.listen((response) {
+      pp('\n$mm stream delivered locationResponseError: ');
       myPrettyJsonPrint(response.toJson());
       // _navigateToMap(response);
     });
   }
 
-  void _navigateToMap(
-      lib.LocationResponse response, lib.Vehicle vehicle) async {
-    pp('\n$mm stream delivered locationResponse: ');
-    NavigationUtils.navigateTo(
-        context: context, widget: VehicleMonitorMap(vehicle: vehicle));
+  void _navigateToMap(lib.Vehicle car, lib.LocationResponse response) {
+     NavigationUtils.navigateTo(
+        context: context, widget: VehicleMap(vehicle: car, locationResponse: response,));
+    locationResponse = response;
   }
+
+lib.LocationResponse? locationResponse;
 
   _startTimer() {
     timer = Timer.periodic(const Duration(minutes: 3), (timer) {
@@ -248,17 +272,17 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
       }
       routes.sort((a, b) => a.name!.compareTo(b.name!));
 
-      pp('$mm  dispatches: ${dispatches.length}');
-      pp('$mm trips: ${trips.length}');
-      pp('$mm commuterRequests: ${commuterRequests.length}');
-      pp('$mm  totalPassengersIn: $totalPassengersIn');
-      pp('$mm totalCommuterCash: $totalCommuterCash');
-      pp('$mm totalPassengersRequests: $totalPassengersRequests');
-      pp('$mm totalDispatchedPassengers: $totalDispatchedPassengers');
-      pp('$mm totalRankFeeCash: $totalRankFeeCash');
-      pp('$mm totalCashCheckIn: $totalCashCheckIn');
-      pp('$mm totalRankFeeCheckIn: $totalRankFeeCheckIn');
-      pp('$mm users: ${users.length} cars: ${vehicles.length} routes: ${routes.length}');
+      // pp('$mm  dispatches: ${dispatches.length}');
+      // pp('$mm trips: ${trips.length}');
+      // pp('$mm commuterRequests: ${commuterRequests.length}');
+      // pp('$mm  totalPassengersIn: $totalPassengersIn');
+      // pp('$mm totalCommuterCash: $totalCommuterCash');
+      // pp('$mm totalPassengersRequests: $totalPassengersRequests');
+      // pp('$mm totalDispatchedPassengers: $totalDispatchedPassengers');
+      // pp('$mm totalRankFeeCash: $totalRankFeeCash');
+      // pp('$mm totalCashCheckIn: $totalCashCheckIn');
+      // pp('$mm totalRankFeeCheckIn: $totalRankFeeCheckIn');
+      // pp('$mm users: ${users.length} cars: ${vehicles.length} routes: ${routes.length}');
 
       pp('$mm ........................................................... Are we good?');
     } catch (e, s) {
@@ -276,7 +300,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     for (var cr in commuterRequests) {
       cnt += cr.numberOfPassengers!;
     }
-    pp('$mm _getPassengers: $cnt');
+    // pp('$mm _getPassengers: $cnt');
 
     return cnt;
   }
@@ -286,7 +310,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     for (var value in dispatches) {
       tot += value.passengers!;
     }
-    pp('$mm _getDispatchedPassengers: $tot');
+    // pp('$mm _getDispatchedPassengers: $tot');
 
     return tot;
   }
@@ -296,7 +320,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     for (var value in rankFeeCashCheckIns) {
       tot += value.amount!;
     }
-    pp('$mm _getRankFeeCashCheckIn: $tot');
+    // pp('$mm _getRankFeeCashCheckIn: $tot');
 
     return tot;
   }
@@ -308,7 +332,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     for (var value in commuterCashCheckIns) {
       totalCashCheckIn += value.amount!;
     }
-    pp('$mm _getCommuterCashCheckIn: $totalCashCheckIn');
+    // pp('$mm _getCommuterCashCheckIn: $totalCashCheckIn');
 
     return totalCashCheckIn;
   }
@@ -318,7 +342,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     for (var value in commuterRequests) {
       totalPassengersRequests += value.numberOfPassengers!;
     }
-    pp('$mm _getPassengersRequests: $totalPassengersRequests');
+    // pp('$mm _getPassengersRequests: $totalPassengersRequests');
 
     return totalPassengersRequests;
   }
@@ -338,7 +362,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     for (var value in rankFeeCashPayments) {
       totalRankFeeCash += value.amount!;
     }
-    pp('$mm _getRankFees: $totalRankFeeCash');
+    // pp('$mm _getRankFees: $totalRankFeeCash');
 
     return totalRankFeeCash;
   }
@@ -381,7 +405,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     for (var cc in commuterCashPayments) {
       totalCommuterCash += cc.amount!;
     }
-    pp('$mm _getAggregateCommuterCash: totalCommuterCash: $totalCommuterCash');
+    // pp('$mm _getAggregateCommuterCash: totalCommuterCash: $totalCommuterCash');
   }
 
   @override
@@ -400,16 +424,22 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
         totalPassengers += m.passengersIn!;
       }
     }
-    pp('$mm _getTotalPassengers: totalPassengers: $totalPassengers');
+    // pp('$mm _getTotalPassengers: totalPassengers: $totalPassengers');
 
     setState(() {});
     return totalPassengers;
   }
 
   lib.Vehicle? selectedVehicle;
+
   _requestLocation(lib.Vehicle car) async {
-    pp('$mm request car location ...');
+    pp('\n\n$mm request car location ... check fcmToken!');
+    myPrettyJsonPrint(car.toJson());
     selectedVehicle = car;
+    if (car.fcmToken == null) {
+      showErrorToast(message: 'Missing fcmToken ', context: context);
+      return;
+    }
     var user = prefs.getUser();
     var fcmToken = await msg.FirebaseMessaging.instance.getToken();
     try {
@@ -419,9 +449,10 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
           userId: user!.userId,
           fcmToken: fcmToken,
           userName: '${user.firstName} ${user.lastName}',
-          associationId: user.associationId, vehicleFcmToken: car.fcmToken);
+          associationId: user.associationId,
+          vehicleFcmToken: car.fcmToken);
       var rest = await dataApiDog.addLocationRequest(lr);
-      pp('$mm request car location ... ${rest.toJson()}');
+      pp('$mm car location request sent ... ${rest.toJson()}');
       if (mounted) {
         showOKToast(
             duration: const Duration(seconds: 2),
@@ -582,7 +613,8 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
                         ),
                         gapH8,
                         SizedBox(
-                          height: 120, width: 600,
+                          height: 120,
+                          width: 600,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
