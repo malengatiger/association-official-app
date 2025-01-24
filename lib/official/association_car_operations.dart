@@ -239,9 +239,9 @@ lib.LocationResponse? locationResponse;
 
   void _getData() async {
     pp('\n\n$mm  ........... getting association data bundle .... $startDate  - $endDate');
-    setState(() {
-      busy = true;
-    });
+    // setState(() {
+    //   busy = true;
+    // });
     var sd = DateTime.parse(startDate!).toUtc().toIso8601String();
     var ed = DateTime.parse(endDate!).toUtc().toIso8601String();
     pp('\n\n$mm  ........... getting association data bundle; UTC format: .... $sd  - $ed');
@@ -258,6 +258,7 @@ lib.LocationResponse? locationResponse;
         users = associationData!.users;
         vehicles = associationData!.vehicles;
         routes = associationData!.routes;
+        rankFeeCashPayments = associationData!.rankFeeCashPayments;
         totalPassengersIn = _getPassengers();
         totalRankFeeCash = _getRankFees();
         totalCommuterCash = _getCommuterCash();
@@ -289,10 +290,10 @@ lib.LocationResponse? locationResponse;
       pp('$e $s');
     }
 
-    pp('$mm setting state ...');
-    setState(() {
-      busy = false;
-    });
+    // pp('$mm setting state ...');
+    // setState(() {
+    //   busy = false;
+    // });
   }
 
   int _getPassengers() {
@@ -493,6 +494,8 @@ lib.LocationResponse? locationResponse;
     }
     var pCounts = passengerCounts.length;
     _getAggregateCommuterCash();
+    _getRankFees();
+
     return Scaffold(
         appBar: AppBar(
           title: const Text('Taxi Operations'),
@@ -511,7 +514,7 @@ lib.LocationResponse? locationResponse;
                           children: [
                             Text('${widget.association.associationName}',
                                 style: myTextStyle(
-                                    weight: FontWeight.w900, fontSize: 16)),
+                                    weight: FontWeight.w900, fontSize: 14)),
                             IconButton(
                                 onPressed: () {
                                   _addLocationRequest();
@@ -615,16 +618,17 @@ lib.LocationResponse? locationResponse;
                         SizedBox(
                           height: 120,
                           width: 600,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Text(
-                                'Total Commuter Cash',
+                                'Commuter Cash',
                                 style: myTextStyle(
                                     color: Colors.grey,
                                     weight: FontWeight.w900,
                                     fontSize: 16),
                               ),
+                              gapW32,
                               Card(
                                 elevation: 24,
                                 child: Padding(
@@ -632,7 +636,34 @@ lib.LocationResponse? locationResponse;
                                   child: Text(
                                     nf.format(totalCommuterCash),
                                     style: myTextStyle(
-                                        weight: FontWeight.w900, fontSize: 40),
+                                        weight: FontWeight.w900, fontSize: 28, color: Colors.green.shade700),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          height: 72,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                ' Rank Fee Cash',
+                                style: myTextStyle(
+                                    color: Colors.grey,
+                                    weight: FontWeight.w900,
+                                    fontSize: 14),
+                              ),
+                              gapW32,
+                              Card(
+                                elevation: 16,
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Text(
+                                    nf.format(totalRankFeeCash),
+                                    style: myTextStyle(
+                                        weight: FontWeight.w900, fontSize: 20),
                                   ),
                                 ),
                               )
@@ -708,7 +739,7 @@ class ActivityPanel extends StatelessWidget {
                   badgeStyle: bd.BadgeStyle(
                       badgeColor: textStyle!.color!,
                       elevation: 8,
-                      padding: EdgeInsets.all(16)),
+                      padding: EdgeInsets.all(12)),
                 )
               ],
             )));

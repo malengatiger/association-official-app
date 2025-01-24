@@ -54,19 +54,18 @@ class VehicleMapState extends State<VehicleMap>
     if (widget.locationResponse != null) {
       myPrettyJsonPrint(widget.locationResponse!.toJson());
     }
-    _getVehicleData();
   }
 
   void _listen() async {
     telemetryStreamSub = fcmService.vehicleTelemetryStream
-        .listen((lib.VehicleTelemetry t) async {
-      pp('$mm ... vehicleTelemetryStream delivered heartbeat for: ${t.vehicleReg} at ${t.created}');
-      if (t.vehicleId == widget.vehicle.vehicleId) {
+        .listen((lib.VehicleTelemetry telemetry) async {
+      pp('$mm ... vehicleTelemetryStream delivered heartbeat for: ${telemetry.vehicleReg} at ${telemetry.created}');
+      if (telemetry.vehicleId == widget.vehicle.vehicleId) {
         await _putCarOnMap(
-            vehicleReg: t.vehicleReg!,
-            created: t.created!,
-            latitude: t.position!.coordinates[1],
-            longitude: t.position!.coordinates[0]);
+            vehicleReg: telemetry.vehicleReg!,
+            created: telemetry.created?? DateTime.now().toIso8601String(),
+            latitude: telemetry.position!.coordinates[1],
+            longitude: telemetry.position!.coordinates[0]);
       }
     });
   }
@@ -473,8 +472,8 @@ class VehicleDataWidget extends StatelessWidget {
       cash += count.amount!;
     }
     double rfcash = 0.00;
-    for (var count in vehicleData.rankFeeCashPayments) {
-      rfcash += count.amount!;
+    for (var payment in vehicleData.rankFeeCashPayments) {
+      rfcash += payment.amount!;
     }
     return SizedBox(
         height: 400,
