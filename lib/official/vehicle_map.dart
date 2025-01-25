@@ -457,9 +457,10 @@ class VehicleMapState extends State<VehicleMap>
 }
 
 class VehicleDataWidget extends StatelessWidget {
-  const VehicleDataWidget({super.key, required this.vehicleData});
+  const VehicleDataWidget({super.key, required this.vehicleData, this.padding});
 
   final lib.VehicleData vehicleData;
+  final Padding? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -480,6 +481,7 @@ class VehicleDataWidget extends StatelessWidget {
         child: ListView(
           children: [
             Item(title: 'Trips', count: vehicleData.trips.length,
+              padding: padding,
               style: myTextStyle(weight: FontWeight.w900, color: Colors.black, fontSize: 22),
             ),
             Item(
@@ -487,6 +489,7 @@ class VehicleDataWidget extends StatelessWidget {
             Item(
               title: 'Total Passengers',
               count: passengers,
+              padding: padding,
               style: myTextStyle(
                   weight: FontWeight.w900,
                   fontSize: 28,
@@ -497,12 +500,14 @@ class VehicleDataWidget extends StatelessWidget {
             ),
             Item(
               title: 'Telemetry',
+              padding: padding,
               count: vehicleData.vehicleTelemetry.length,
               style: myTextStyle(weight: FontWeight.normal, color: Colors.grey),
             ),
             Item(
                 title: 'Commuter Cash',
                 amount: cash,
+                padding: padding,
                 style: myTextStyle(
                     weight: FontWeight.w900,
                     color: Colors.green.shade800,
@@ -510,6 +515,7 @@ class VehicleDataWidget extends StatelessWidget {
             Item(
                 title: 'Rank Fee Cash',
                 amount: rfcash,
+                padding: padding,
                 style: myTextStyle(
                     weight: FontWeight.w900,
                     color: Colors.green.shade800,
@@ -521,12 +527,13 @@ class VehicleDataWidget extends StatelessWidget {
 
 class Item extends StatelessWidget {
   const Item(
-      {super.key, required this.title, this.count, this.amount, this.style});
+      {super.key, required this.title, this.count, this.amount, this.style, this.padding});
 
   final String title;
   final int? count;
   final double? amount;
   final TextStyle? style;
+  final Padding? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -534,7 +541,7 @@ class Item extends StatelessWidget {
     final af = NumberFormat('###,###,##0.00');
     return Card(
         elevation: 8,
-        child: Padding(
+        child: padding?? Padding(
             padding: EdgeInsets.all(8),
             child: Row(
               children: [
