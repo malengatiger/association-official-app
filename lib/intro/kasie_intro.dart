@@ -121,12 +121,14 @@ class KasieIntroState extends State<KasieIntro>
   }
 
   Future<void> onSuccessfulSignIn() async {
-    pp('$mm ................................'
-        '... onSuccessfulSignIn .... ');
+
     // Navigator.of(context).pop();
     user = prefs.getUser();
     if (user != null) {
-      if (user!.userType == Constants.AMBASSADOR) {
+      pp('$mm ................................'
+          '... onSuccessfulSignIn and user not null.... ');
+      myPrettyJsonPrint(user!.toJson());
+      if (user!.userType == Constants.ASSOCIATION_OFFICIAL) {
         _navigateToOfficialDashboard();
       }
     }

@@ -9,6 +9,10 @@ import 'package:kasie_transie_library/data/data_schemas.dart' as lib;
 import 'package:kasie_transie_library/messaging/fcm_bloc.dart';
 import 'package:kasie_transie_library/utils/emojis.dart';
 import 'package:kasie_transie_library/utils/functions.dart';
+import 'package:kasie_transie_library/utils/navigator_utils.dart';
+import 'package:kasie_transie_library/widgets/vehicle_widgets/car_passenger_counts.dart';
+
+import 'association_car_operations.dart';
 
 class TaxiOperations extends StatefulWidget {
   const TaxiOperations(
@@ -41,6 +45,7 @@ class TaxiOperationsState extends State<TaxiOperations>
   void initState() {
     _controller = AnimationController(vsync: this);
     super.initState();
+    _startTimer();
     _getVehicleData();
   }
 
@@ -77,7 +82,7 @@ class TaxiOperationsState extends State<TaxiOperations>
           vehicleId: widget.vehicle.vehicleId!, startDate: sd, endDate: ed);
       if (mounted) {
         if (vehicleData != null) {
-          /// telemetry = vehicleData!.vehicleTelemetry;
+          _setTotals();
         }
       }
     } catch (e, stack) {
@@ -97,6 +102,7 @@ class TaxiOperationsState extends State<TaxiOperations>
   @override
   void dispose() {
     _controller.dispose();
+    timer.cancel();
     super.dispose();
   }
 
@@ -113,77 +119,126 @@ class TaxiOperationsState extends State<TaxiOperations>
     for (var c in vehicleData!.rankFeeCashPayments) {
       totalRankFeeCash += c.amount!;
     }
-    int totalPassengers = 0;
 
+    totalPassengers = 0;
     for (var c in vehicleData!.passengerCounts) {
       totalPassengers += c.passengersIn!;
     }
+    setState(() {});
+  }
+
+  late Timer timer;
+
+  void _startTimer() {
+    timer = Timer.periodic(const Duration(seconds: 300), (timer) {
+      pp('$mm Timer tick #${timer.tick} -- _getVehicleData ...');
+      _getVehicleData();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    _setTotals();
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.vehicle.vehicleReg}'),
+        title: Text(
+          '${widget.vehicle.vehicleReg}',
+          style: myTextStyleBold(fontSize: 36),
+        ),
       ),
       body: SafeArea(
         child: Stack(
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text('Operational Details', style: myTextStyleBold(),),
-                vehicleData == null
-                    ? gapW32
-                    : Expanded(
-                        child: ListView(
-                        children: [
-                          Item(
-                            title: 'Dispatches',
-                            count: vehicleData!.dispatchRecords.length,
-                            padding: Padding(
-                              padding: EdgeInsets.all(16),
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Operational Details',
+                    style: myTextStyle(),
+                  ),
+                  startDate == null
+                      ? gapH32
+                      : PeriodWidget(startDate: startDate!, endDate: endDate!),
+                  vehicleData == null
+                      ? gapW32
+                      : Expanded(
+                          child: ListView(
+                          children: [
+                            Item(
+                              title: 'Dispatches',
+                              count: vehicleData!.dispatchRecords.length,
+                              padding: 8,
+                              style: myTextStyle(fontSize: 16),
                             ),
-                            style: myTextStyleBold(fontSize: 24),
-                          ),
-                          Item(
-                            title: 'Trips',
-                            count: vehicleData!.trips.length,
-                            style: myTextStyleBold(fontSize: 24),
-                            padding: Padding(padding: EdgeInsets.all(16)),
-                          ),
-                          Item(
-                            title: 'Total Passengers',
-                            count: totalPassengers,
-                            padding: Padding(
-                              padding: EdgeInsets.all(16),
+                            Item(
+                              title: 'Trips',
+                              count: vehicleData!.trips.length,
+                              style: myTextStyle(
+                                fontSize: 16,
+                              ),
+                              padding: 8,
                             ),
-                            style: myTextStyleBold(fontSize: 24),
-                          ),
-                          Item(
-                            title: 'Rank Fee Cash',
-                            amount: totalRankFeeCash,
-                            padding: Padding(
-                              padding: EdgeInsets.all(16),
+                            GestureDetector(
+                              onTap: () {
+                                NavigationUtils.navigateTo(
+                                    context: context,
+                                    widget: CarPassengerCounts(
+                                      vehicle: widget.vehicle,
+                                      startDate: startDate,
+                                      endDate: endDate,
+                                    ));
+                              },
+                              child: Item(
+                                title: 'Passengers',
+                                count: totalPassengers,
+                                padding: 16,
+                                style: myTextStyleBold(
+                                    fontSize: 24, color: Colors.pink),
+                              ),
                             ),
-                            style: myTextStyleBold(fontSize: 24),
-                          ),
-                          Item(
-                            title: 'Commuter Fee Cash',
-                            amount: totalCommuterCash,
-                            padding: Padding(
-                              padding: EdgeInsets.all(16),
+                            gapH32,
+                            gapH32,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Cash Collected',
+                                    style: myTextStyleBold(color: Colors.grey)),
+                              ],
                             ),
-                            style: myTextStyleBold(fontSize: 24),
-                          ),
-                        ],
-                      ))
-              ],
+                            gapH16,
+                            Item(
+                              title: 'Rank Fee Cash',
+                              amount: totalRankFeeCash,
+                              padding: 16,
+                              style: myTextStyleBold(fontSize: 24),
+                            ),
+                            gapH32,
+                            Item(
+                              title: 'Commuter Cash',
+                              amount: totalCommuterCash,
+                              padding: 16,
+                              style: myTextStyleBold(
+                                  fontSize: 24, color: Colors.green.shade700),
+                            ),
+                          ],
+                        ))
+                ],
+              ),
             ),
             busy
-                ? Positioned(child: Center(child: CircularProgressIndicator()))
+                ? Positioned(
+                    child: Center(
+                        child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 4,
+                        backgroundColor: Colors.red,
+                      ),
+                    )),
+                  )
                 : gapW32,
           ],
         ),

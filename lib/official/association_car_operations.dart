@@ -21,6 +21,7 @@ import 'package:kasie_transie_library/messaging/fcm_bloc.dart';
 import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/utils/prefs.dart';
+import 'package:kasie_transie_library/widgets/vehicle_widgets/car_passenger_counts.dart';
 import 'package:kasie_transie_library/widgets/vehicle_widgets/vehicle_search.dart';
 
 class AssociationCarOperations extends StatefulWidget {
@@ -144,23 +145,23 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     });
     passengerCountSub =
         fcmService.passengerCountStream.listen((passengerCount) {
-          pp('$mm stream delivered passengerCount: ');
-          myPrettyJsonPrint(passengerCount.toJson());
-          _getData();
-        });
+      pp('$mm stream delivered passengerCount: ');
+      myPrettyJsonPrint(passengerCount.toJson());
+      _getData();
+    });
     commuterCashPaymentSub =
         fcmService.commuterCashPaymentStream.listen((payment) {
-          pp('\n$mm stream delivered commuterCashPayment: ');
-          myPrettyJsonPrint(payment.toJson());
-          _getData();
-        });
+      pp('\n$mm stream delivered commuterCashPayment: ');
+      myPrettyJsonPrint(payment.toJson());
+      _getData();
+    });
 
     rankFeeCashPaymentSub =
         fcmService.rankFeeCashPaymentStream.listen((payment) {
-          pp('\n$mm stream delivered .rankFeeCashPayment: ');
-          myPrettyJsonPrint(payment.toJson());
-          _getData();
-        });
+      pp('\n$mm stream delivered .rankFeeCashPayment: ');
+      myPrettyJsonPrint(payment.toJson());
+      _getData();
+    });
 
     tripSub = fcmService.tripStream.listen((trip) {
       pp('\n$mm stream delivered trip: ');
@@ -180,30 +181,29 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     });
     locationResponseSub =
         fcmService.locationResponseStream.listen((response) async {
-          pp(
-              '\n$mm stream delivered locationResponse:  go to VehicleMonitorMap');
-          myPrettyJsonPrint(response.toJson());
-          var car = await semCache.getVehicle(
-              response.associationId!, response.vehicleId!);
-          if (car != null) {
-            if (mounted) {
-              if (locationResponse != null) {
-                if (locationResponse!.created! != response.created) {
-                  _navigateToMap(car, response);
-                }
-              } else {
-                _navigateToMap(car, response);
-              }
+      pp('\n$mm stream delivered locationResponse:  go to VehicleMonitorMap');
+      myPrettyJsonPrint(response.toJson());
+      var car = await semCache.getVehicle(
+          response.associationId!, response.vehicleId!);
+      if (car != null) {
+        if (mounted) {
+          if (locationResponse != null) {
+            if (locationResponse!.created! != response.created) {
+              _navigateToMap(car, response);
             }
+          } else {
+            _navigateToMap(car, response);
           }
-        });
+        }
+      }
+    });
 
     locationResponseErrorSub =
         fcmService.locationResponseErrorStream.listen((response) {
-          pp('\n$mm stream delivered locationResponseError: ');
-          myPrettyJsonPrint(response.toJson());
-          // _navigateToMap(response);
-        });
+      pp('\n$mm stream delivered locationResponseError: ');
+      myPrettyJsonPrint(response.toJson());
+      // _navigateToMap(response);
+    });
   }
 
   void _navigateToMap(lib.Vehicle car, lib.LocationResponse response) {
@@ -243,15 +243,13 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
   double totalRankFeeCheckIn = 0.00;
 
   void _getData() async {
-    pp(
-        '\n\n$mm  ........... getting association data bundle .... $startDate  - $endDate');
+    pp('\n\n$mm  ........... getting association data bundle .... $startDate  - $endDate');
     // setState(() {
     //   busy = true;
     // });
     var sd = DateTime.parse(startDate!).toUtc().toIso8601String();
     var ed = DateTime.parse(endDate!).toUtc().toIso8601String();
-    pp(
-        '\n\n$mm  ........... getting association data bundle; UTC format: .... $sd  - $ed');
+    pp('\n\n$mm  ........... getting association data bundle; UTC format: .... $sd  - $ed');
 
     try {
       associationData = await listApiDog.getAssociationData(
@@ -292,8 +290,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
       // pp('$mm totalRankFeeCheckIn: $totalRankFeeCheckIn');
       // pp('$mm users: ${users.length} cars: ${vehicles.length} routes: ${routes.length}');
 
-      pp(
-          '$mm ........................................................... Are we good?');
+      pp('$mm ........................................................... Are we good?');
     } catch (e, s) {
       pp('$e $s');
     }
@@ -480,20 +477,19 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     selectedVehicle = await NavigationUtils.navigateTo(
         context: context,
         widget:
-        VehicleSearch(associationId: widget.association.associationId!));
-    var user = prefs.getUser();
+            VehicleSearch(associationId: widget.association.associationId!));
     if (selectedVehicle != null) {
-      _confirmAction();
+      _confirmAction(selectedVehicle!);
     }
   }
 
-  _confirmAction() async {
+  _confirmAction(lib.Vehicle car) async {
     showDialog(
         barrierDismissible: true,
         context: context,
         builder: (_) {
           return AlertDialog(
-              title: Text('${selectedVehicle!.vehicleReg}'),
+              title: Text('${car.vehicleReg}'),
               content: SizedBox(
                 height: 160,
                 child: Column(
@@ -507,12 +503,12 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
                         style: ButtonStyle(
                             elevation: WidgetStatePropertyAll(8),
                             backgroundColor:
-                            WidgetStatePropertyAll(Colors.blue.shade50),
+                                WidgetStatePropertyAll(Colors.blue.shade50),
                             padding:
-                            WidgetStatePropertyAll(EdgeInsets.all(16))),
+                                WidgetStatePropertyAll(EdgeInsets.all(16))),
                         onPressed: () {
                           Navigator.of(context).pop();
-                          _requestLocation(selectedVehicle!);
+                          _requestLocation(car);
                         },
                         label: const Text('Request Current Location'),
                       ),
@@ -526,16 +522,19 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
                         style: ButtonStyle(
                             elevation: WidgetStatePropertyAll(8),
                             backgroundColor:
-                            WidgetStatePropertyAll(Colors.amber.shade50),
+                                WidgetStatePropertyAll(Colors.amber.shade50),
                             padding:
-                            WidgetStatePropertyAll(EdgeInsets.all(16))),
+                                WidgetStatePropertyAll(EdgeInsets.all(16))),
                         onPressed: () {
                           Navigator.of(context).pop();
-
                           if (selectedVehicle != null) {
-                            NavigationUtils.navigateTo(context: context,
-                                widget: TaxiOperations(vehicle: selectedVehicle!,
-                                startDate: startDate, endDate: endDate,));
+                            NavigationUtils.navigateTo(
+                                context: context,
+                                widget: TaxiOperations(
+                                  vehicle: selectedVehicle!,
+                                  startDate: startDate,
+                                  endDate: endDate,
+                                ));
                           }
                         },
                         label: const Text('Taxi Operations'),
@@ -546,8 +545,6 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
               ));
         });
   }
-
-  _createFile() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -561,6 +558,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
     var pCounts = passengerCounts.length;
     _getAggregateCommuterCash();
     _getRankFees();
+    _getTotalPassengers();
 
     return Scaffold(
         appBar: AppBar(
@@ -568,207 +566,161 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
         ),
         body: SafeArea(
             child: Stack(
-              children: [
-                Center(
-                    child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment
-                                      .spaceEvenly,
-                                  children: [
-                                    Text('${widget.association
-                                        .associationName}',
-                                        style: myTextStyle(
-                                            weight: FontWeight.w900,
-                                            fontSize: 14)),
-                                    IconButton(
-                                        onPressed: () {
-                                          _searchCars();
-                                        },
-                                        icon: const FaIcon(FontAwesomeIcons.car,
-                                            size: 16, color: Colors.blue)),
-                                    IconButton(
-                                        onPressed: () {
-                                          _pickDates(true);
-                                        },
-                                        icon: const FaIcon(
-                                          FontAwesomeIcons.arrowsRotate,
-                                          size: 16,
-                                        )),
-                                  ],
-                                ),
-                                Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: SizedBox(
-                                      height: 48,
-                                      child: Column(
-                                        children: [
-                                          Row(
-                                            children: [
-                                              SizedBox(
-                                                width: 60,
-                                                child: Text('Starting',
-                                                    style: myTextStyle(
-                                                        color: Colors.grey,
-                                                        weight: FontWeight
-                                                            .w900)),
-                                              ),
-                                              Text(start ?? '',
-                                                  style: myTextStyle(
-                                                      color: Colors.grey,
-                                                      weight: FontWeight
-                                                          .normal)),
-                                            ],
-                                          ),
-                                          Row(
-                                            children: [
-                                              SizedBox(
-                                                width: 60,
-                                                child: Text(
-                                                  'Ending',
-                                                  style: myTextStyle(
-                                                      color: Colors.grey,
-                                                      weight: FontWeight.w900),
-                                                ),
-                                              ),
-                                              Text(end ?? '',
-                                                  style: myTextStyle(
-                                                      color: Colors.grey,
-                                                      weight: FontWeight
-                                                          .normal)),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    )),
-                                ActivityPanel(
-                                  title: 'Dispatches',
-                                  textStyle: myTextStyle(
-                                      color: Colors.green,
-                                      fontSize: 36,
-                                      weight: FontWeight.w900),
-                                  count: dispatches.length,
-                                ),
-                                ActivityPanel(
-                                  title: 'Trips',
-                                  textStyle: myTextStyle(
-                                      color: Colors.blue,
-                                      fontSize: 36,
-                                      weight: FontWeight.w900),
-                                  count: trips.length,
-                                ),
-                                ActivityPanel(
-                                  title: 'Total Passengers',
-                                  textStyle: myTextStyle(
-                                      color: Colors.pink,
-                                      fontSize: 36,
-                                      weight: FontWeight.w900),
-                                  count: _getTotalPassengers(),
-                                ),
-                                ActivityPanel(
-                                  title: 'Telemetry',
-                                  textStyle: myTextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 24,
-                                      weight: FontWeight.normal),
-                                  count: vehicleTelemetry.length,
-                                ),
-                                ActivityPanel(
-                                  title: 'Passenger Counts',
-                                  textStyle: myTextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 24,
-                                      weight: FontWeight.normal),
-                                  count: pCounts,
-                                ),
-                                gapH8,
-                                SizedBox(
-                                  height: 120,
-                                  width: 600,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        'Commuter Cash',
-                                        style: myTextStyle(
-                                            color: Colors.grey,
-                                            weight: FontWeight.w900,
-                                            fontSize: 16),
-                                      ),
-                                      gapW32,
-                                      Card(
-                                        elevation: 24,
-                                        child: Padding(
-                                          padding: EdgeInsets.all(16),
-                                          child: Text(
-                                            nf.format(totalCommuterCash),
-                                            style: myTextStyle(
-                                                weight: FontWeight.w900,
-                                                fontSize: 28,
-                                                color: Colors.green.shade700),
-                                          ),
-                                        ),
-                                      )
-                                    ],
+          children: [
+            Center(
+                child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: SingleChildScrollView(
+                        child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Text('${widget.association.associationName}',
+                                style: myTextStyle(
+                                    weight: FontWeight.w900, fontSize: 14)),
+                            IconButton(
+                                onPressed: () {
+                                  _searchCars();
+                                },
+                                icon: const FaIcon(FontAwesomeIcons.car,
+                                    size: 16, color: Colors.blue)),
+                            IconButton(
+                                onPressed: () {
+                                  _pickDates(true);
+                                },
+                                icon: const FaIcon(
+                                  FontAwesomeIcons.arrowsRotate,
+                                  size: 16,
+                                )),
+                          ],
+                        ),
+                      startDate == null? gapH32: PeriodWidget(startDate: startDate!, endDate: endDate!),
+                        ActivityPanel(
+                          title: 'Dispatches',
+                          textStyle: myTextStyle(
+                              color: Colors.green,
+                              fontSize: 36,
+                              weight: FontWeight.w900),
+                          count: dispatches.length,
+                        ),
+                        ActivityPanel(
+                          title: 'Trips',
+                          textStyle: myTextStyle(
+                              color: Colors.blue,
+                              fontSize: 36,
+                              weight: FontWeight.w900),
+                          count: trips.length,
+                        ),
+                        ActivityPanel(
+                          title: 'Total Passengers',
+                          textStyle: myTextStyle(
+                              color: Colors.pink,
+                              fontSize: 36,
+                              weight: FontWeight.w900),
+                          count: _getTotalPassengers(),
+                        ),
+                        ActivityPanel(
+                          title: 'Telemetry',
+                          textStyle: myTextStyle(
+                              color: Colors.grey,
+                              fontSize: 24,
+                              weight: FontWeight.normal),
+                          count: vehicleTelemetry.length,
+                        ),
+                        ActivityPanel(
+                          title: 'Passenger Counts',
+                          textStyle: myTextStyle(
+                              color: Colors.grey,
+                              fontSize: 24,
+                              weight: FontWeight.normal),
+                          count: pCounts,
+                        ),
+                        gapH8,
+                        SizedBox(
+                          height: 120,
+                          width: 600,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Commuter Cash',
+                                style: myTextStyle(
+                                    color: Colors.grey,
+                                    weight: FontWeight.w900,
+                                    fontSize: 16),
+                              ),
+                              gapW32,
+                              Card(
+                                elevation: 24,
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Text(
+                                    nf.format(totalCommuterCash),
+                                    style: myTextStyle(
+                                        weight: FontWeight.w900,
+                                        fontSize: 28,
+                                        color: Colors.green.shade700),
                                   ),
                                 ),
-                                SizedBox(
-                                  height: 72,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        ' Rank Fee Cash',
-                                        style: myTextStyle(
-                                            color: Colors.grey,
-                                            weight: FontWeight.w900,
-                                            fontSize: 14),
-                                      ),
-                                      gapW32,
-                                      Card(
-                                        elevation: 16,
-                                        child: Padding(
-                                          padding: EdgeInsets.all(16),
-                                          child: Text(
-                                            nf.format(totalRankFeeCash),
-                                            style: myTextStyle(
-                                                weight: FontWeight.w900,
-                                                fontSize: 20),
-                                          ),
-                                        ),
-                                      )
-                                    ],
+                              )
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          height: 72,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                ' Rank Fee Cash',
+                                style: myTextStyle(
+                                    color: Colors.grey,
+                                    weight: FontWeight.w900,
+                                    fontSize: 14),
+                              ),
+                              gapW32,
+                              Card(
+                                elevation: 16,
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Text(
+                                    nf.format(totalRankFeeCash),
+                                    style: myTextStyle(
+                                        weight: FontWeight.w900, fontSize: 20),
                                   ),
-                                )
-                              ],
-                            )))),
-                busy
-                    ? Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      )),
-                )
-                    : gapW32,
-              ],
-            )));
+                                ),
+                              )
+                            ],
+                          ),
+                        )
+                      ],
+                    )))),
+            busy
+                ? Positioned(
+                    bottom: 4,
+                    right: 4,
+                    child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        )),
+                  )
+                : gapW32,
+          ],
+        )));
   }
 }
 
 class ActivityPanel extends StatelessWidget {
-  const ActivityPanel({super.key,
-    required this.title,
-    this.amount,
-    this.count,
-    this.elevation,
-    this.textStyle});
+  const ActivityPanel(
+      {super.key,
+      required this.title,
+      this.amount,
+      this.count,
+      this.elevation,
+      this.textStyle});
 
   final String title;
   final double? amount;

@@ -359,11 +359,18 @@ class VehicleMapState extends State<VehicleMap>
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Vehicle Map: ${widget.vehicle.vehicleReg}',
-          style: myTextStyleMediumLargeWithColor(
-              context, Theme.of(context).primaryColor, 20),
-        ),
+        title: Row(
+          children: [
+            Text(
+              'Current Vehicle Location:',
+              style: myTextStyle(),
+            ),
+            gapW16,
+            Text('${widget.vehicle.vehicleReg}',
+              style: myTextStyleBold(),
+            ),
+          ],
+        )
       ),
       body: Stack(
         children: [
@@ -481,7 +488,7 @@ class VehicleDataWidget extends StatelessWidget {
         child: ListView(
           children: [
             Item(title: 'Trips', count: vehicleData.trips.length,
-              padding: padding,
+              padding: 16,
               style: myTextStyle(weight: FontWeight.w900, color: Colors.black, fontSize: 22),
             ),
             Item(
@@ -489,7 +496,7 @@ class VehicleDataWidget extends StatelessWidget {
             Item(
               title: 'Total Passengers',
               count: passengers,
-              padding: padding,
+              padding: 16,
               style: myTextStyle(
                   weight: FontWeight.w900,
                   fontSize: 28,
@@ -500,14 +507,14 @@ class VehicleDataWidget extends StatelessWidget {
             ),
             Item(
               title: 'Telemetry',
-              padding: padding,
+              padding: 16,
               count: vehicleData.vehicleTelemetry.length,
               style: myTextStyle(weight: FontWeight.normal, color: Colors.grey),
             ),
             Item(
                 title: 'Commuter Cash',
                 amount: cash,
-                padding: padding,
+                padding: 16,
                 style: myTextStyle(
                     weight: FontWeight.w900,
                     color: Colors.green.shade800,
@@ -515,7 +522,7 @@ class VehicleDataWidget extends StatelessWidget {
             Item(
                 title: 'Rank Fee Cash',
                 amount: rfcash,
-                padding: padding,
+                padding: 16,
                 style: myTextStyle(
                     weight: FontWeight.w900,
                     color: Colors.green.shade800,
@@ -533,7 +540,7 @@ class Item extends StatelessWidget {
   final int? count;
   final double? amount;
   final TextStyle? style;
-  final Padding? padding;
+  final double? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -541,12 +548,12 @@ class Item extends StatelessWidget {
     final af = NumberFormat('###,###,##0.00');
     return Card(
         elevation: 8,
-        child: padding?? Padding(
-            padding: EdgeInsets.all(8),
+        child: Padding(
+            padding: EdgeInsets.all(padding??8),
             child: Row(
               children: [
                 SizedBox(
-                    width: 140,
+                    width: 120,
                     child: Text(
                       title,
                       style: myTextStyle(
