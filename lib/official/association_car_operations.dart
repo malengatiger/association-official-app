@@ -589,7 +589,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
 
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Taxi Operations'),
+          title:  Text('Association Taxi Operations', style: myTextStyle(),),
         ),
         body: SafeArea(
             child: Stack(
