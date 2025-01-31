@@ -22,6 +22,7 @@ import 'package:kasie_transie_library/utils/functions.dart';
 import 'package:kasie_transie_library/utils/navigator_utils.dart';
 import 'package:kasie_transie_library/utils/prefs.dart';
 import 'package:kasie_transie_library/widgets/vehicle_widgets/car_passenger_counts.dart';
+import 'package:kasie_transie_library/widgets/vehicle_widgets/fuel_top_up_widget.dart';
 import 'package:kasie_transie_library/widgets/vehicle_widgets/vehicle_search.dart';
 
 class AssociationCarOperations extends StatefulWidget {
@@ -491,7 +492,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
           return AlertDialog(
               title: Text('${car.vehicleReg}'),
               content: SizedBox(
-                height: 160,
+                height: 300,
                 child: Column(
                   children: [
                     SizedBox(
@@ -538,6 +539,32 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
                           }
                         },
                         label: const Text('Taxi Operations'),
+                      ),
+                    ),
+                    gapH32,
+                    SizedBox(
+                      width: 300,
+                      child: ElevatedButton.icon(
+                        icon: FaIcon(FontAwesomeIcons.gasPump, color: Colors.pink),
+                        iconAlignment: IconAlignment.start,
+                        style: ButtonStyle(
+                            elevation: WidgetStatePropertyAll(8),
+                            backgroundColor:
+                            WidgetStatePropertyAll(Colors.amber.shade50),
+                            padding:
+                            WidgetStatePropertyAll(EdgeInsets.all(16))),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          if (selectedVehicle != null) {
+                            NavigationUtils.navigateTo(
+                                context: context,
+                                widget: FuelTopUpWidget(
+                                  vehicle: selectedVehicle!,
+                                  isLandscape: false,
+                                ));
+                          }
+                        },
+                        label: const Text('Fuel TopUp'),
                       ),
                     ),
                   ],
@@ -600,8 +627,8 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
                           title: 'Dispatches',
                           textStyle: myTextStyle(
                               color: Colors.green,
-                              fontSize: 36,
-                              weight: FontWeight.w900),
+                              fontSize: 12,
+                              weight: FontWeight.normal),
                           count: dispatches.length,
                         ),
                         ActivityPanel(
@@ -638,59 +665,53 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
                         ),
                         gapH8,
                         SizedBox(
-                          height: 120,
+                          height: 64,
                           width: 600,
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 'Commuter Cash',
                                 style: myTextStyle(
-                                    color: Colors.grey,
+                                    color: Colors.grey.shade300,
                                     weight: FontWeight.w900,
-                                    fontSize: 16),
+                                    fontSize: 18),
                               ),
-                              gapW32,
-                              Card(
-                                elevation: 24,
-                                child: Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: Text(
-                                    nf.format(totalCommuterCash),
-                                    style: myTextStyle(
-                                        weight: FontWeight.w900,
-                                        fontSize: 28,
-                                        color: Colors.green.shade700),
-                                  ),
+                              gapW16,
+                              Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Text(
+                                  nf.format(totalCommuterCash),
+                                  style: myTextStyle(
+                                      weight: FontWeight.w900,
+                                      fontSize: 28,
+                                      color: Colors.green.shade700),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         ),
                         SizedBox(
-                          height: 72,
+                          height: 48,
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 ' Rank Fee Cash',
                                 style: myTextStyle(
-                                    color: Colors.grey,
+                                    color: Colors.grey.shade300,
                                     weight: FontWeight.w900,
-                                    fontSize: 14),
+                                    fontSize: 18),
                               ),
-                              gapW32,
-                              Card(
-                                elevation: 16,
-                                child: Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: Text(
-                                    nf.format(totalRankFeeCash),
-                                    style: myTextStyle(
-                                        weight: FontWeight.w900, fontSize: 20),
-                                  ),
+                              gapW16,
+                              Padding(
+                                padding: EdgeInsets.all(8),
+                                child: Text(
+                                  nf.format(totalRankFeeCash),
+                                  style: myTextStyle( color: Colors.green.shade700,
+                                      weight: FontWeight.w900, fontSize: 20),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         )
@@ -704,7 +725,7 @@ class AssociationCarOperationsState extends State<AssociationCarOperations>
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
+                          strokeWidth: 4,
                         )),
                   )
                 : gapW32,
@@ -720,13 +741,14 @@ class ActivityPanel extends StatelessWidget {
       this.amount,
       this.count,
       this.elevation,
-      this.textStyle});
+      this.textStyle, this.badgeStyle});
 
   final String title;
   final double? amount;
   final int? count;
   final double? elevation;
   final TextStyle? textStyle;
+  final bd.BadgeStyle? badgeStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -748,10 +770,10 @@ class ActivityPanel extends StatelessWidget {
             child: Row(
               children: [
                 SizedBox(
-                  width: 120,
+                  width: 128,
                   child: Text(title,
                       style: myTextStyle(
-                          weight: FontWeight.normal, color: Colors.grey)),
+                          weight: FontWeight.normal, color: Colors.grey, fontSize: 12)),
                 ),
                 gapW32,
                 bd.Badge(
@@ -759,11 +781,11 @@ class ActivityPanel extends StatelessWidget {
                       style: myTextStyle(
                           weight: FontWeight.normal,
                           color: Colors.white,
-                          fontSize: 16)),
-                  badgeStyle: bd.BadgeStyle(
+                          fontSize: 12)),
+                  badgeStyle: badgeStyle?? bd.BadgeStyle(
                       badgeColor: textStyle!.color!,
                       elevation: 8,
-                      padding: EdgeInsets.all(12)),
+                      padding: EdgeInsets.all(8)),
                 )
               ],
             )));
