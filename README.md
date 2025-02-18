@@ -7,4 +7,4 @@
 Android and iOS
 
 ## Description
-This Android and iOS app reads and acquires data at both the Association and Taxi level
+This Android and iOS app reads and acquires data at both the Association and Taxi level.
