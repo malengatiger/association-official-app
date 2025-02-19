@@ -8,6 +8,7 @@ Android and iOS
 
 ## Description
 This Android and iOS app reads and acquires data at both the Association and Taxi level.
+
 ![Screenshot_20250219_235050](https://github.com/user-attachments/assets/baa81746-5c3e-48a5-a956-db20853b22ef)
 ![Screenshot_20250219_234948](https://github.com/user-attachments/assets/4b5a8da7-ebc3-446c-a98f-3b1b55d5509d)
 ![Screenshot_20250219_234830](https://github.com/user-attachments/assets/c6c59e6d-3a8e-4b58-96c6-a0822f8440f5)
