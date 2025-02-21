@@ -7,7 +7,9 @@
 Android and iOS
 
 ## Description
-This Android and iOS app reads and acquires data at both the Association and Taxi level.
+This Android and iOS app reads and acquires data at both the Association and Taxi level. The app is used by an Official member of the Association and helps her monitor her Taxi fleet.
+
+### Select a Taxi and drll down by any period
 
 ![Screenshot_20250219_235050](https://github.com/user-attachments/assets/baa81746-5c3e-48a5-a956-db20853b22ef)
 ![Screenshot_20250219_234948](https://github.com/user-attachments/assets/4b5a8da7-ebc3-446c-a98f-3b1b55d5509d)
